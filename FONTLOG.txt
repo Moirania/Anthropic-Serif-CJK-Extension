@@ -1,0 +1,95 @@
+FONTLOG for Anthropic Serif CJK Extension
+==========================================
+
+This file records the changes made to the font software, following the
+convention recommended by the SIL Open Font License FAQ for modified
+fonts. It is part of the font release package together with OFL.txt.
+
+
+Original material
+-----------------
+
+1. Latin outlines, OpenType layout tables, vertical metrics and internal
+   naming:
+   Anthropic Serif Web Text Regular, a proprietary brand typeface of
+   Anthropic, PBC. 720 glyphs, 628 cmap code points, 2000 units per em,
+   usWeightClass 400. GSUB features: aalt, calt, case, ccmp, dlig, dnom,
+   frac, liga, locl, numr, onum, ordn, sinf, ss01, subs, sups, tnum,
+   zero. GPOS features: kern, mark.
+
+2. CJK outlines:
+   Noto Serif CJK SC Medium (Source Han Serif), face index 2 of
+   NotoSerifCJK-Medium.ttc, copyright (c) 2017-2022 Adobe
+   (http://www.adobe.com/) and other contributors, released under the
+   SIL Open Font License, Version 1.1. 65,535 glyphs, 1000 units per em,
+   CFF (Type 2 charstrings) outlines.
+
+
+Changes made in this project
+----------------------------
+
+Copyright (c) 2026 Moirania, for the changes listed below.
+
+- Selected 31,004 CJK-related code points from the source cmap: the CJK
+  Unified Ideographs block, Extension A, Extensions B through I,
+  compatibility ideographs and their supplement, CJK punctuation,
+  bopomofo, CJK strokes and radicals, ideographic description characters,
+  vertical forms, CJK compatibility forms and halfwidth/fullwidth forms.
+  Code points already covered by the Latin font were excluded.
+
+- Converted each selected CFF charstring to a TrueType quadratic glyph
+  with fontTools Cu2QuPen (max_err 0.5, reverse_direction enabled) so
+  that the composite remains a single glyf-based TrueType font.
+
+- Scaled all CJK outlines from 1000 to 2000 units per em to match the
+  Latin font. Chinese advances were set to full-width 2000 units; Latin
+  advances, side bearings and baseline metrics were left untouched.
+
+- Appended every new glyph at the END of the glyph order so that all
+  original glyph ids, and therefore every GSUB/GPOS lookup, continue to
+  reference the correct glyph. No original glyph was rewritten.
+
+- Added a (3,10) format 12 cmap subtable so that non-BMP code points in
+  Extensions B through I are addressable, while keeping the existing
+  format 4 and format 6 subtables intact for legacy clients.
+
+- Updated maxp, hhea, head bounding box, OS/2 character range fields and
+  post/glyph name tables to describe the enlarged character set.
+
+- Wrote the Adobe copyright line and the SIL OFL 1.1 license reference
+  into the name table (nameIDs 0, 5, 13, 14) of the composite font and
+  added a note that the Reserved Font Name "Noto" is not used.
+
+- Produced a WOFF2 build of the composite font (brotli compressed) for
+  web delivery, and two specimen images showing mixed Latin/CJK setting
+  and a before/after comparison against the unmodified Latin font.
+
+- Wrote scripts/build_cjk.py so that every step above is reproducible.
+
+
+Known limitations
+-----------------
+
+- The CJK outlines are matched to the Latin font by optical weight and
+  metric alignment, not redrawn stroke by stroke. Stroke detail remains
+  recognisably that of Source Han Serif.
+
+- Converting CFF to TrueType quadratic outlines discards the native CFF
+  hinting. Very small on-screen sizes may appear slightly softer.
+
+- The internal family name is still "Anthropic Serif Web Text" so that the
+  composite can replace the original font in an existing document. For a
+  conservative redistribution, rename the internal family; see
+  docs/BUILD.md.
+
+- The full WOFF2 is 6.9 MB. Subsetting to the characters actually used by
+  a page is strongly recommended; see docs/USAGE.md.
+
+
+License of the changes
+----------------------
+
+The CJK-derived portion of the font software, including these changes, is
+distributed under the SIL Open Font License, Version 1.1 (see OFL.txt).
+The upstream Latin outlines remain proprietary and are not relicensed.
+See LICENSE and docs/COMPLIANCE.md.

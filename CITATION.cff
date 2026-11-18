@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this font, cite it as below."
+title: "Anthropic Serif CJK Extension"
+abstract: "A CJK character set extension for Anthropic Serif Web Text Regular, adding 31,004 Chinese code points while preserving the original Latin outlines and OpenType layout features. The upstream Latin outlines are proprietary; the CJK-derived outlines are under SIL OFL 1.1; documentation and scripts are under MIT. See LICENSE."
+authors:
+  - family-names: "Lin"
+    given-names: "Yingxue"
+    alias: "Moirania"
+type: software
+license:
+  - "LicenseRef-Proprietary-Upstream"
+  - "OFL-1.1"
+  - "MIT"
+repository-code: "https://github.com/Moirania/Anthropic-Serif-CJK-Extension"
+keywords:
+  - fonts
+  - typography
+  - cjk
+  - chinese
+  - fonttools
+  - unicode
+version: "1.0.0"
+date-released: "2026-11-19"

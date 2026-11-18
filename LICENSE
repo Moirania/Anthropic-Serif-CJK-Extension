@@ -1,0 +1,94 @@
+License and rights notice for Anthropic Serif CJK Extension
+============================================================
+
+This repository contains three different kinds of material with three
+different rights situations. Read this file before using anything in it.
+
+
+1. Documentation, build scripts, sample images and metadata
+-----------------------------------------------------------
+
+The Markdown documents, the Python build script, the specimen images and
+the repository metadata (everything except the files under fonts/) are
+released under the MIT License:
+
+MIT License
+
+Copyright (c) 2026 Moirania
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+The specimen images depict text rendered with the font files described
+below. They are documents created with the font, not font software, and
+therefore are not themselves subject to the SIL Open Font License.
+
+
+2. CJK glyph outlines (SIL Open Font License 1.1)
+-------------------------------------------------
+
+The Chinese glyph outlines in fonts/ are derived from Noto Serif CJK SC
+Medium (Source Han Serif), copyright (c) 2017-2022 Adobe
+(http://www.adobe.com/) and other contributors, licensed under the SIL
+Open Font License, Version 1.1.
+
+The complete license text is in OFL.txt. In summary, the OFL requires:
+
+  - the copyright notice and the license text accompany any copy;
+  - modified versions are distributed only under the OFL;
+  - the font software is not sold by itself;
+  - Reserved Font Names, where declared, are not used by derivatives;
+  - the original authors' names are not used to promote a modified version.
+
+The conversion from CFF cubic outlines to TrueType quadratic outlines,
+the scaling to 2000 units per em, the metric unification and the composite
+assembly were added for this project (c) 2026 Moirania, as recorded in
+FONTLOG.txt.
+
+The Reserved Font Name "Noto" is not used as the family name of this
+composite font.
+
+
+3. Upstream Latin outlines (proprietary, NOT open source)
+----------------------------------------------------------
+
+Anthropic Serif Web Text and related names are proprietary brand assets of
+Anthropic, PBC. No public font license from the rights holder is known to
+accompany the upstream Latin font, and it is NOT covered by the MIT license
+above, NOT covered by the SIL Open Font License, and NOT relicensed by this
+repository.
+
+The files under fonts/ retain the complete Latin outline set of that
+upstream font together with its original internal family name. Publishing,
+redistributing or using those files in a product may require permission
+from the rights holder. The maintainer of this repository chose to publish
+the full files in a public repository and assumes responsibility for that
+decision. This repository grants no rights to the upstream font and makes
+no representation that such rights have been obtained.
+
+See docs/COMPLIANCE.md for the full analysis and for a conservative
+publication path that does not redistribute the upstream outlines.
+
+
+Trademarks
+----------
+
+Anthropic and the Anthropic typeface names are trademarks of Anthropic,
+PBC. This project is not affiliated with, sponsored by, or endorsed by
+Anthropic. The names are used only to identify the typeface that was
+extended.

@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Build intermediates
+build/
+dist/
+*.ttx
+*.fea.bak
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Local credentials and configuration - never commit these
+.gh_token
+*.token
+.env
+.env.*
