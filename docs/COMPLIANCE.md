@@ -51,10 +51,15 @@ Two sources supply the added outlines, both under the SIL Open Font
 License 1.1:
 
 - Noto Serif CJK SC (Source Han Serif), copyright (c) 2014-2022 Adobe and
-  other contributors, for the Chinese glyphs.
+  other contributors, for the Chinese glyphs, and (in 1.2.0 only) for kana,
+  Hangul syllables, Jamo and the CJK enclosed / squared / box-drawing
+  symbols. Builds 1.0.0 and 1.1.0 take only its Chinese-related subset;
+  1.2.0 takes essentially its entire remaining character set.
 - Noto Serif from [notofonts/latin-greek-cyrillic](https://github.com/notofonts/latin-greek-cyrillic),
   Copyright 2022 The Noto Project Authors, for Latin Extended, Greek,
   Cyrillic and the shared marks. It was instanced at wght=500 before use.
+  All three builds use the same two sources; no third font was introduced
+  for the kana and Hangul coverage.
 
 The OFL permits use, study, modification, embedding and redistribution,
 including commercial use, subject to these conditions:

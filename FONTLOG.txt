@@ -18,6 +18,12 @@ Version history
                       Releases. Neither build overwrites the other. No
                       font outlines, metrics or cmap entries were changed
                       in this restructure; only file placement changed.
+  1.200  2026-11-19  Full build: added kana, Hangul and the remaining
+                      CJK source character set (13,195 code points beyond
+                      1.1.0, 47,092 glyphs / 46,963 code points in total).
+                      Shipped in fonts/full/ as a third independent build
+                      with its own GitHub Release. See the section
+                      "Version 1.200 additions" below.
 
 This file records the changes made to the font software, following the
 convention recommended by the SIL Open Font License FAQ for modified
@@ -147,30 +153,96 @@ Final metrics: 33,897 glyphs, 33,768 addressable code points, 2,394
 non-BMP code points, highest code point U+3106C.
 
 
+Version 1.200 additions (kana, Hangul, complete CJK set)
+----------------------------------------------------------
+
+Copyright (c) 2026 Moirania, for the changes listed below.
+
+No new outline source was introduced. The same Noto Serif CJK SC Medium
+(SC face index 2) that supplied the Chinese glyphs also contains kana,
+Hangul and the full set of CJK enclosed / squared / box-drawing symbols;
+all five faces of the TTC were checked and have identical cmap coverage,
+so face 2 continues to be used for consistency with 1.0.0 and 1.1.0.
+
+- Added the --full switch to scripts/build_cjk.py. In this mode the CJK
+  selection step keeps every code point of the source cmap instead of
+  only the Chinese-related ranges. The exclusion set is the actual cmap
+  of the LGC source, not its nominal Unicode ranges, so characters that
+  Noto Serif lacks (for example U+2160 ROMAN NUMERAL ONE) still come
+  from the CJK source and no gaps are left.
+
+- Added 13,195 code points beyond 1.1.0:
+    * Hangul Syllables U+AC00-U+D7A3                        11,172
+    * Hangul Jamo, Compatibility Jamo, Ext-A, Ext-B           451
+    * Hiragana, Katakana, Katakana Phonetic Ext, Kanbun       221
+    * Enclosed CJK, squared compatibility, enclosed ideographs  735
+    * Enclosed alphanumerics, Roman numerals, box drawing      312
+    * Arrows, math, geometric, misc symbols, dingbats,
+      small form variants, combining enclosing marks           304
+  (The last group includes 43 scattered single code points such as
+  U+2423 and the U+2580-U+259F block elements.)
+
+- Hangul syllables were taken as precomposed glyphs with a 1932-unit
+  advance; kana keep the full-width 2000-unit advance already used for
+  Chinese. No Jamo composition or vertical kana OpenType lookups were
+  added, so the original 19 GSUB / 2 GPOS features remain untouched.
+
+- Extended the format 12 cmap subtable to 46,963 entries, now also
+  carrying U+1F100-U+1F1FF and U+1F200-U+1F2FF. The four original
+  subtables remain intact; the BMP format 4 subtables now hold 44,321
+  code points each.
+
+- Recomputed maxp, hhea, head bounding box, OS/2 Unicode ranges and the
+  name table. Updated the version string to "Version 1.200 Full".
+  Rebuilt the TTF (23.6 MB) and WOFF2 (8.4 MB).
+
+- Produced two new specimen sheets rendered with the 1.2.0 build:
+  assets/kana-preview.png (fifty-sound table, voiced / semi-voiced /
+  contracted kana, enclosed and squared forms, Japanese reading samples)
+  and assets/hangul-preview.png (compatibility Jamo, syllable samples,
+  enclosed Hangul, Korean reading samples and a six-script mixed line).
+  Both follow the existing print-specimen style: hard 1px rules, crop
+  marks, left alignment, generous margins, no rounded corners, no glass,
+  no gradient buttons.
+
+- Updated README.md, fonts/README.md, docs/BUILD.md,
+  docs/CHARACTER-SET.md, docs/USAGE.md, docs/COMPLIANCE.md, LICENSE,
+  CITATION.cff and CONTRIBUTING.md for the third build; created the
+  v1.2.0-full GitHub Release with its own TTF and WOFF2 assets.
+
+Final metrics: 47,092 glyphs, 46,963 addressable code points, 2,619
+non-BMP code points, highest code point U+3106C.
+
+
 Known limitations
 -----------------
 
 - The added outlines are matched to the Latin font by optical weight and
-  metric alignment, not redrawn stroke by stroke. Chinese retains Source
-  Han Serif stroke detail; Greek, Cyrillic and Latin Extended retain Noto
-  Serif detail. The two families share a design language but are not
-  identical to the Anthropic Latin letterforms.
+  metric alignment, not redrawn stroke by stroke. Chinese, kana, Hangul
+  and CJK symbols retain Source Han Serif stroke detail; Greek, Cyrillic
+  and Latin Extended retain Noto Serif detail. The two families share a
+  design language but are not identical to the Anthropic Latin letterforms.
 
 - Converting CFF to TrueType quadratic outlines discards the native CFF
   hinting, and decomposing the LGC composites discards their hinting
   instructions. Very small on-screen sizes may appear slightly softer.
 
-- The original GSUB/GPOS lookups cover Latin only. Greek and Cyrillic get
-  correct glyphs and advances but not Latin kerning pairs or
-  language-specific substitutions.
+- The original GSUB/GPOS lookups cover Latin only. Greek, Cyrillic, kana
+  and Hangul get correct glyphs and advances but not Latin kerning pairs
+  or language-specific substitutions. Hangul Jamo sequences are not
+  recombined into syllables, and no vertical kana layout is implemented.
 
-- The internal family name is still "Anthropic Serif Web Text" so that the
-  composite can replace the original font in an existing document. For a
-  conservative redistribution, rename the internal family; see
-  docs/BUILD.md.
+- The internal family name is still "Anthropic Serif Web Text" in all
+  three builds, so that a build can replace the original font in an
+  existing document. Install only one build at a time. For a conservative
+  redistribution, rename the internal family; see docs/BUILD.md.
 
-- The full WOFF2 is 6.9 MB. Subsetting to the characters actually used by
-  a page is strongly recommended; see docs/USAGE.md.
+- Colour emoji and pictographs are not included; use a dedicated emoji
+  font. The U+1F200 block contributes only monochrome enclosed CJK
+  ideographs.
+
+- The 1.2.0 WOFF2 is 8.4 MB. Subsetting to the characters actually used
+  by a page is strongly recommended; see docs/USAGE.md.
 
 
 License of the changes

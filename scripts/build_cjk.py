@@ -31,7 +31,15 @@ Typical use, producing the two independent builds:
         --no-lgc \
         --out ./fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf
 
-The two outputs are independent: run both, or just one. Never write a new
+    # 1.2.0 full (adds kana, Hangul and all remaining CJK symbols)
+    python3 scripts/build_cjk.py \
+        --latin /path/to/AnthropicSerifWebText.ttf \
+        --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
+        --lgc-font "/path/to/NotoSerif[wdth,wght].ttf" \
+        --full \
+        --out ./fonts/full/AnthropicSerifWebText-Full.ttf
+
+The three outputs are independent: run any of them. Never write a new
 build over an existing file. Pass --no-cjk to build a
 Latin/Greek/Cyrillic-only extension (useful for testing).
 
@@ -110,6 +118,7 @@ DEBUG_SAMPLE = (
     0x4E00, 0x4E2D, 0x6587, 0x5B57, 0x6392, 0x7248, 0x8BBE, 0x8BA1,
     0x4E16, 0x754C, 0x4F60, 0x597D, 0x3002, 0xFF0C, 0x3001, 0xFF1A,
     0x0100, 0x03B1, 0x0416, 0x1F00,
+    0x3042, 0x3044, 0x30A2, 0x30AB, 0xAC00, 0xD55C, 0xAE00, 0x1100,
 )
 
 
@@ -224,6 +233,9 @@ def main():
                     help="replace internal family names (conservative builds)")
     ap.add_argument("--no-cjk", action="store_true", help="skip the CJK source")
     ap.add_argument("--no-lgc", action="store_true", help="skip the LGC source")
+    ap.add_argument("--full", action="store_true",
+                    help="add every remaining CJK source code point: kana, "
+                         "Hangul syllables/jamo and CJK symbols (1.2.0)")
     ap.add_argument("--limit", type=int, default=0,
                     help="convert only a small sample, for debugging")
     args = ap.parse_args()
@@ -260,11 +272,27 @@ def main():
         print("CJK source: %s | upem %d | scale %.3f" %
               (cjk["name"].getDebugName(1) or "(unnamed)",
                cjk["head"].unitsPerEm, scale))
-        cjk_todo = sorted(cp for cp in cjk.getBestCmap()
-                          if in_ranges(cp, CJK_RANGES) and cp not in orig_cps)
+        cjk_cmap = cjk.getBestCmap()
+        if args.full:
+            # Complete build: take everything the CJK source has, except
+            # code points the LGC source can actually supply. Excluding only
+            # the LGC source's real cmap (not its nominal ranges) matters:
+            # the LGC font lacks characters such as U+2160 ROMAN NUMERAL ONE,
+            # which must then come from the CJK source to avoid a gap.
+            lgc_available = set()
+            if args.lgc_font and not args.no_lgc:
+                probe = TTFont(args.lgc_font, lazy=True)
+                lgc_available = set(probe.getBestCmap())
+                probe.close()
+            cjk_todo = sorted(cp for cp in cjk_cmap
+                              if cp not in orig_cps and cp not in lgc_available)
+            print("CJK source: complete mode (kana, Hangul, CJK symbols)")
+        else:
+            cjk_todo = sorted(cp for cp in cjk_cmap
+                              if in_ranges(cp, CJK_RANGES) and cp not in orig_cps)
         if args.limit:
             cjk_todo = [cp for cp in DEBUG_SAMPLE
-                        if cp in cjk.getBestCmap() and cp not in orig_cps]
+                        if cp in cjk_cmap and cp not in orig_cps]
         print("CJK code points to add: %d" % len(cjk_todo))
         names, mapping, failed = add_cjk_glyphs(
             base, used, glyf, hmtx, cjk, scale, args.max_err, cjk_todo)
@@ -367,7 +395,8 @@ def main():
               "'Noto' and 'Source Han' are not used. Upstream Latin outlines "
               "are proprietary and are not relicensed.")
     set_name(base, 0, notice)
-    set_name(base, 5, "Version 1.100 CJK-LGC")
+    set_name(base, 5, "Version 1.200 Full" if args.full
+             else "Version 1.100 CJK-LGC")
     license_desc = "SIL Open Font License, Version 1.1"
     if lgc is not None:
         license_desc = str(lgc["name"].getDebugName(13) or license_desc)

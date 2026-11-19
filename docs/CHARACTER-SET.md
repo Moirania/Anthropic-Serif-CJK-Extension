@@ -4,35 +4,41 @@ This document lists exactly which Unicode ranges were added to the
 original Latin font. Numbers were counted from the two source fonts, minus
 code points the Latin base font already covered.
 
-It describes **1.1.0 multilingual**. The **1.0.0 cjk-only** build contains
-only the CJK rows below: 31,004 added code points, 31,724 glyphs, 31,595
-addressable code points, and 2,306 non-BMP code points. It has no Greek,
-no Cyrillic, no Latin Extended beyond the upstream font's own Latin-1 and
-Latin Extended-A, and no shared LGC marks. See
-[../fonts/README.md](../fonts/README.md) for the side-by-side comparison.
+It describes the **1.2.0 full** build, the most complete of the three.
+Earlier builds are strict subsets:
+
+| Build | Added | Glyphs | Code points | Excludes |
+| --- | --- | --- | --- | --- |
+| 1.0.0 cjk-only | 31,004 | 31,724 | 31,595 | all LGC, kana, Hangul, CJK extra symbols |
+| 1.1.0 multilingual | 33,177 | 33,897 | 33,768 | kana, Hangul, CJK extra symbols |
+| 1.2.0 full | 46,372 | 47,092 | 46,963 | nothing from either source |
+
+See [../fonts/README.md](../fonts/README.md) for the side-by-side
+comparison.
 
 ## Totals
 
 | Metric | Value |
 | --- | --- |
-| Code points added | 33,177 |
-| Glyphs in the composite font | 33,897 |
-| Addressable code points (best cmap) | 33,768 |
+| Code points added | 46,372 |
+| Glyphs in the composite font | 47,092 |
+| Addressable code points (best cmap) | 46,963 |
 | Highest code point | U+3106C |
-| Non-BMP code points via format 12 cmap | 2,394 |
+| Non-BMP code points via format 12 cmap | 2,619 |
 | Original Latin code points retained | 628 |
 | GSUB / GPOS features retained | 19 / 2 |
 
 The format 12 subtable is built from the upstream Unicode BMP subtables
-(591 code points) plus the 33,177 added code points, giving 33,768 entries.
+(591 code points) plus the 46,372 added code points, giving 46,963 entries.
 The upstream font also has 37 code points that exist only in its Macintosh
 (1,0,6) subtable; those are deliberately left in that subtable so Mac
 applications keep resolving them to the original glyphs. All four original
 subtables are preserved untouched.
 
-The 2,394 non-BMP code points break down as 2,248 CJK Extensions B–F,
-55 compatibility supplement, 3 CJK Extensions G–I, 57 Latin Extended-F
-and 31 Latin Extended-G.
+The 2,619 non-BMP code points break down as 2,248 CJK Extensions B–F,
+55 compatibility supplement, 3 CJK Extensions G–I, 57 Latin Extended-F,
+31 Latin Extended-G, 167 Enclosed Alphanumeric Supplement (U+1F100–U+1F1FF)
+and 58 Enclosed Ideographic Supplement (U+1F200–U+1F2FF).
 
 ### By group
 
@@ -43,6 +49,12 @@ and 31 Latin Extended-G.
 | CJK Extensions B–I plus compatibility supplement | 2,306 | Noto Serif CJK SC Medium |
 | CJK compatibility ideographs (BMP) | 366 | Noto Serif CJK SC Medium |
 | CJK punctuation, radicals, bopomofo, strokes, forms | 779 | Noto Serif CJK SC Medium |
+| Hangul Syllables | 11,172 | Noto Serif CJK SC Medium |
+| Hangul Jamo, Compatibility Jamo, Ext-A, Ext-B | 451 | Noto Serif CJK SC Medium |
+| Hiragana, Katakana, Katakana Phonetic Ext, Kanbun | 221 | Noto Serif CJK SC Medium |
+| Enclosed CJK, squared compatibility, enclosed ideographs | 735 | Noto Serif CJK SC Medium |
+| Enclosed alphanumerics, Roman numerals, box drawing | 312 | Noto Serif CJK SC Medium |
+| Arrows, math, geometric, misc symbols, dingbats, small forms | 304 | Noto Serif CJK SC Medium |
 | Latin Extended (including IPA and phonetic) | 1,018 | Noto Serif wght=500 |
 | Greek (including Greek Extended) | 354 | Noto Serif wght=500 |
 | Cyrillic (including Ext-A/B/C) | 441 | Noto Serif wght=500 |
@@ -111,7 +123,7 @@ and their combinations, needed for classical and liturgical texts.
 
 ## Shared supporting ranges
 
-These are not scripts themselves, but without them the four writing systems
+These are not scripts themselves, but without them the six writing systems
 cannot be typeset properly: accented letters need combining marks,
 polytonic Greek needs spacing modifiers, and multilingual text needs matching
 punctuation and symbols.
@@ -126,15 +138,77 @@ punctuation and symbols.
 | U+2100–U+214F | Letterlike Symbols | 79 |
 | U+2150–U+218F | Number Forms | 6 |
 
+## Kana ranges (1.2.0 only)
+
+| Unicode range | Block | Added |
+| --- | --- | --- |
+| U+3040–U+309F | Hiragana | 93 |
+| U+30A0–U+30FF | Katakana | 96 |
+| U+31F0–U+31FF | Katakana Phonetic Extensions | 16 |
+| U+3190–U+319F | Kanbun | 16 |
+
+Halfwidth Katakana (U+FF61–U+FF9F, 63 code points) and the CJK
+punctuation used in Japanese were already covered by the Halfwidth and
+Fullwidth Forms / CJK Symbols and Punctuation rows of the 1.0.0 build.
+
+## Hangul ranges (1.2.0 only)
+
+| Unicode range | Block | Added |
+| --- | --- | --- |
+| U+AC00–U+D7A3 | Hangul Syllables | 11,172 |
+| U+1100–U+11FF | Hangul Jamo | 256 |
+| U+3130–U+318F | Hangul Compatibility Jamo | 94 |
+| U+A960–U+A97F | Hangul Jamo Extended-A | 29 |
+| U+D7B0–U+D7FF | Hangul Jamo Extended-B | 72 |
+
+Hangul syllables are precomposed glyphs. Conjoining Jamo sequences are
+present as individual characters but are not recombined into syllables by
+any OpenType lookup; use a shaping engine or precomposed text.
+
+## CJK symbol ranges (1.2.0 only)
+
+These blocks are not scripts, but they appear constantly in Japanese and
+Korean typography: circled and parenthesized labels, squared unit words,
+box-drawing tables and enclosed ideographs.
+
+| Unicode range | Block | Added |
+| --- | --- | --- |
+| U+3200–U+32FF | Enclosed CJK Letters and Months | 255 |
+| U+3300–U+33FF | CJK Compatibility (squared units) | 255 |
+| U+1F100–U+1F1FF | Enclosed Alphanumeric Supplement | 167 |
+| U+1F200–U+1F2FF | Enclosed Ideographic Supplement | 58 |
+| U+2460–U+24FF | Enclosed Alphanumerics | 160 |
+| U+2500–U+257F | Box Drawing | 128 |
+| U+2150–U+218F | Roman numerals (Number Forms) | 24 |
+| U+2190–U+21FF | Arrows | 17 |
+| U+2200–U+22FF | Mathematical Operators | 66 |
+| U+2300–U+23FF | Miscellaneous Technical | 25 |
+| U+25A0–U+25FF | Geometric Shapes and block elements | 37 |
+| U+2600–U+26FF | Miscellaneous Symbols | 50 |
+| U+2700–U+27BF | Dingbats | 38 |
+| U+FE50–U+FE6F | Small Form Variants | 26 |
+| U+20DD–U+20DE | Combining enclosing circle / square | 2 |
+
+The remaining 43 code points are scattered single characters such as
+U+2423 OPEN BOX and the U+2580–U+259F block elements.
+
 ## What is deliberately not included
 
-The CJK source also contains kana, Hangul and a large set of general
-symbols. The LGC source contains arrows, mathematical operators and
-geometric shapes. Neither is added here. The goal is a focused extension of
-an existing Latin typeface to CJK, Greek and Cyrillic, not a universal
-pan-Unicode font. Adding everything would enlarge the file substantially
-and would clash with the Latin design. Emoji, in particular, should always
-come from a dedicated emoji font.
+The 1.2.0 build takes essentially everything the CJK source offers, but
+this is still not a universal pan-Unicode font:
+
+- **Colour emoji and pictographs** are not present. The U+1F200–U+1F2FF
+  block contributes monochrome enclosed CJK ideographs, not emoji. Use a
+  dedicated emoji font for pictographs.
+- **Private Use Area** code points are not added.
+- **Hangul composition and vertical kana positioning** are not implemented
+  as OpenType features; see [BUILD.md](BUILD.md).
+- **Other scripts** such as Arabic, Devanagari, Thai and Hebrew are out of
+  scope, as are kana extensions beyond U+31FF that the Source Han Serif
+  version used here does not contain.
+
+The 1.0.0 and 1.1.0 builds deliberately stop earlier; see the table at
+the top of this document.
 
 ## cmap structure
 
@@ -145,20 +219,22 @@ come from a dedicated emoji font.
 | 3 | 3 (Windows) | 1 | 4 | BMP, primary Windows mapping |
 | 4 | 3 (Windows) | 10 | 12 | Full Unicode, including non-BMP extensions |
 
-The format 12 subtable is required for CJK Extensions B through I and for
-Latin Extended-F/G: format 4 subtables cannot encode code points above
-U+FFFF. Most modern browsers and applications prefer format 12 when it is
-present.
+The format 12 subtable is required for CJK Extensions B through I, Latin
+Extended-F/G, and the U+1F100 / U+1F200 enclosed supplements: format 4
+subtables cannot encode code points above U+FFFF. Most modern browsers and
+applications prefer format 12 when it is present.
 
 ## Verifying coverage yourself
 
 ```bash
 python3 - <<'PY'
 from fontTools.ttLib import TTFont
-f = TTFont("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf")
+f = TTFont("fonts/full/AnthropicSerifWebText-Full.ttf")
 cm = f.getBestCmap()
 for cp in (0x4E00, 0x9FFF, 0x3400, 0x2000B, 0x3002, 0xFF0C,
-           0x0180, 0x03B1, 0x1F00, 0x0416, 0xA640, 0x20AC):
+           0x0180, 0x03B1, 0x1F00, 0x0416, 0xA640, 0x20AC,
+           0x3042, 0x30A2, 0x31F0, 0xAC00, 0xD7A3, 0x1100,
+           0x3131, 0x320E, 0x337F, 0x2160, 0x1F200):
     print("U+%05X" % cp, cm.get(cp, "MISSING"))
 print("total", len(cm), "glyphs", f["maxp"].numGlyphs)
 PY

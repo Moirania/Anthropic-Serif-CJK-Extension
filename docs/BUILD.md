@@ -27,10 +27,17 @@ repository. Both are under the SIL Open Font License 1.1.
 
 ## Full rebuild
 
-The same script produces both independent builds. Run it twice with
-different output paths; the two runs never touch each other's files.
+The same script produces all three independent builds. Run it with
+different output paths; no run touches another build's files.
 
 ```bash
+# 1.0.0 cjk-only (skip the LGC source)
+python3 scripts/build_cjk.py \
+  --latin /path/to/AnthropicSerifWebText.ttf \
+  --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
+  --no-lgc \
+  --out ./fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf
+
 # 1.1.0 multilingual (default, both sources)
 python3 scripts/build_cjk.py \
   --latin /path/to/AnthropicSerifWebText.ttf \
@@ -39,12 +46,13 @@ python3 scripts/build_cjk.py \
   --lgc-weight 500 \
   --out ./fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf
 
-# 1.0.0 cjk-only (skip the LGC source)
+# 1.2.0 full (also take every remaining CJK source character)
 python3 scripts/build_cjk.py \
   --latin /path/to/AnthropicSerifWebText.ttf \
   --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
-  --no-lgc \
-  --out ./fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf
+  --lgc-font "/path/to/NotoSerif[wdth,wght].ttf" \
+  --full \
+  --out ./fonts/full/AnthropicSerifWebText-Full.ttf
 ```
 
 Useful options:
@@ -61,6 +69,7 @@ Useful options:
 | `--family-name` | keep upstream name | Replace internal family and PostScript names |
 | `--no-cjk` | off | Skip the CJK source |
 | `--no-lgc` | off | Skip the LGC source (CJK-only build) |
+| `--full` | off | Add every remaining CJK source code point: kana, Hangul and CJK symbols (1.2.0) |
 | `--limit` | 0 | Convert only a small sample, for debugging |
 
 A `WOFF2` can then be produced for each TTF:
@@ -69,10 +78,12 @@ A `WOFF2` can then be produced for each TTF:
 python3 - <<'PY'
 from fontTools.ttLib import TTFont
 pairs = [
-    ("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf",
-     "fonts/multilingual/AnthropicSerifWebText-Multilingual.woff2"),
     ("fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf",
      "fonts/cjk-only/AnthropicSerifWebText-CJK-Only.woff2"),
+    ("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf",
+     "fonts/multilingual/AnthropicSerifWebText-Multilingual.woff2"),
+    ("fonts/full/AnthropicSerifWebText-Full.ttf",
+     "fonts/full/AnthropicSerifWebText-Full.woff2"),
 ]
 for src, dst in pairs:
     f = TTFont(src)
@@ -90,9 +101,16 @@ for the rule that a new version must never overwrite an existing one.
 1. **Baseline.** Load the Latin font and record its glyph order, cmap and
    vertical metrics. It reads `unitsPerEm == 2000` and never alters
    `hhea`, `OS/2` typographic metrics or the cap/x heights.
-2. **CJK selection.** Walk the CJK source cmap and keep only Chinese-related
-   ranges (see [CHARACTER-SET.md](CHARACTER-SET.md)), excluding code points
-   already mapped by the Latin base.
+2. **CJK selection.** By default, walk the CJK source cmap and keep only
+   Chinese-related ranges (see [CHARACTER-SET.md](CHARACTER-SET.md)),
+   excluding code points already mapped by the Latin base. With `--full`,
+   keep **every** remaining code point of the CJK source instead, which
+   adds kana, Hangul syllables and Jamo, enclosed CJK, squared
+   compatibility forms, box drawing and other CJK-adjacent symbols. In
+   that mode the exclusion set is the LGC source's **actual** cmap, not
+   its nominal ranges: characters such as U+2160 ROMAN NUMERAL ONE are
+   present in the CJK source but absent from Noto Serif, so they must not
+   be excluded or the full build would silently lose them.
 3. **CJK outline conversion.** The CJK source is a CFF font with cubic
    charstrings. `Cu2QuPen` converts each to quadratic curves
    (`max_err=0.5`, `reverse_direction=True`) while a `TransformPen` scales
@@ -140,7 +158,7 @@ Greek and Cyrillic stems consistent with the Chinese. To compare, change
 
 ## Verification checklist
 
-Run the same checks on both builds; only the counts differ.
+Run the same checks on all three builds; only the counts differ.
 
 ```bash
 python3 - <<'PY'
@@ -149,6 +167,7 @@ from fontTools.ttLib import TTFont
 builds = [
     ("fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf", 31724, 31595),
     ("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf", 33897, 33768),
+    ("fonts/full/AnthropicSerifWebText-Full.ttf", 47092, 46963),
 ]
 for path, want_glyphs, want_codes in builds:
     f = TTFont(path)
@@ -162,16 +181,20 @@ for path, want_glyphs, want_codes in builds:
                      for t in f["cmap"].tables])
     print("  unique names", len(set(f.getGlyphOrder())) == len(f.getGlyphOrder()))
     print("  U+4E00", cm.get(0x4E00), "| U+2000B", cm.get(0x2000B),
-          "| U+03B1", cm.get(0x03B1))
+          "| U+03B1", cm.get(0x03B1), "| U+3042", cm.get(0x3042),
+          "| U+AC00", cm.get(0xAC00))
 PY
 ```
 
-Expected for 1.0.0: 31,724 glyphs, 31,595 code points, Greek `MISSING`.
-Expected for 1.1.0: 33,897 glyphs, 33,768 code points, Greek resolved.
-Both retain 19 GSUB features, 2 GPOS features and four cmap subtables
-including a format 12 table. Render a mixed string such as
-`Typography 排版设计 Ελληνικά Кириллица ﬁ 123` with 1.1.0 and confirm that
-`fi` still forms a ligature and no tofu boxes appear.
+Expected for 1.0.0: 31,724 glyphs, 31,595 code points, Greek / kana /
+Hangul `MISSING`. For 1.1.0: 33,897 glyphs, 33,768 code points, Greek
+resolved, kana / Hangul still `MISSING`. For 1.2.0: 47,092 glyphs,
+46,963 code points, all six scripts resolved. All three retain 19 GSUB
+features, 2 GPOS features and four cmap subtables including a format 12
+table. Render a mixed string such as
+`A 文 あ 한 α Ж Typography 排版設計 かな 한글 Ελληνικά Кириллица ﬁ 123`
+with 1.2.0 and confirm that `fi` still forms a ligature and no tofu boxes
+appear.
 
 ## Renaming the internal family name
 
@@ -210,10 +233,16 @@ avoid any Reserved Font Name or trademark conflict; see
   composites drops their hinting instructions too. Very small screen sizes
   may look slightly softer.
 - Greek, Cyrillic and Latin Extended outlines come from Noto Serif, while
-  Chinese comes from Source Han Serif. They share the Noto/Source serif
-  design language and the same wght=500, but they are not redrawn stroke by
-  stroke to imitate the Anthropic Latin letterforms.
-- The original GSUB/GPOS lookups cover Latin only. Greek and Cyrillic get
-  correct glyphs and advances but do not inherit Latin kerning pairs or
-  language-specific substitutions.
-- The full font is large. Subset for the web; see [USAGE.md](USAGE.md).
+  Chinese, kana, Hangul and CJK symbols come from Source Han Serif. They
+  share the Noto/Source serif design language and the same wght=500, but
+  they are not redrawn stroke by stroke to imitate the Anthropic Latin
+  letterforms. Kana and Hangul were taken from the SC face: all five faces
+  of the TTC have identical cmap coverage, and the shared glyph library
+  gives kana and Hangul the same outlines regardless of regional face.
+- The original GSUB/GPOS lookups cover Latin only. Greek, Cyrillic, kana
+  and Hangul get correct glyphs and advances but do not inherit Latin
+  kerning pairs, kana positioning or Hangul composition rules. Hangul
+  syllables are supplied as precomposed U+AC00–U+D7A3 glyphs; composing
+  arbitrary Jamo sequences at render time is not supported.
+- The 1.2.0 build is 23.6 MB as TTF and 8.4 MB as WOFF2. Subset for the
+  web; see [USAGE.md](USAGE.md).

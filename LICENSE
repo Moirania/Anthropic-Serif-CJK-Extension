@@ -44,9 +44,11 @@ therefore are not themselves subject to the SIL Open Font License.
 
 Two OFL-licensed sources supply the added outlines in fonts/:
 
-  a) Chinese: Noto Serif CJK SC Medium (Source Han Serif),
-     copyright (c) 2014-2022 Adobe (http://www.adobe.com/) and other
-     contributors.
+  a) Chinese, kana, Hangul and CJK symbols: Noto Serif CJK SC Medium
+     (Source Han Serif), copyright (c) 2014-2022 Adobe
+     (http://www.adobe.com/) and other contributors. The 1.0.0 and 1.1.0
+     builds use only its Chinese-related characters; the 1.2.0 build uses
+     essentially its entire remaining character set.
 
   b) Latin Extended, Greek and Cyrillic: Noto Serif from the
      notofonts/latin-greek-cyrillic project, Copyright 2022 The Noto
