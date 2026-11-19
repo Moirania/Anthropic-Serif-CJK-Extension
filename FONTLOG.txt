@@ -4,11 +4,20 @@ FONTLOG for Anthropic Serif CJK Extension
 Version history
 ---------------
 
-  1.000  2026-11-19  Initial CJK-only extension (31,004 code points).
+  1.000  2026-11-19  Initial CJK-only extension (31,004 code points,
+                      31,724 glyphs).
   1.100  2026-11-19  Added Latin Extended, Greek and Cyrillic coverage
-                      (2,173 further code points). This entry documents
-                      both releases; the section "Version 1.100 additions"
-                      below records only the newer changes.
+                      (2,173 further code points, 33,897 glyphs). This
+                      entry documents both releases; the section
+                      "Version 1.100 additions" below records only the
+                      newer changes.
+  1.100  2026-11-19  Repository restructure: the two builds are now
+                      shipped as independent files in separate
+                      directories (fonts/cjk-only/ and
+                      fonts/multilingual/) and as separate GitHub
+                      Releases. Neither build overwrites the other. No
+                      font outlines, metrics or cmap entries were changed
+                      in this restructure; only file placement changed.
 
 This file records the changes made to the font software, following the
 convention recommended by the SIL Open Font License FAQ for modified

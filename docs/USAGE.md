@@ -2,15 +2,19 @@
 
 ## Files
 
-| File | Size | Use |
-| --- | --- | --- |
-| `fonts/AnthropicSerifWebText-CJK.ttf` | 15.6 MB | Desktop, print, PDF embedding |
-| `fonts/AnthropicSerifWebText-CJK.woff2` | 6.9 MB | Web pages |
+Two independent builds are shipped. Pick one; see
+[../fonts/README.md](../fonts/README.md) for the full comparison.
 
-Both files contain the same 33,897 glyphs covering CJK, Latin Extended,
-Greek, Cyrillic and shared marks. WOFF2 is brotli compressed and is the
-right choice for the web; TTF is convenient for installing on an operating
-system or embedding in a document.
+| Version | TTF | WOFF2 | Glyphs |
+| --- | --- | --- | --- |
+| 1.0.0 cjk-only | `fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf` (15.3 MB) | `fonts/cjk-only/AnthropicSerifWebText-CJK-Only.woff2` (6.9 MB) | 31,724 |
+| 1.1.0 multilingual | `fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf` (15.6 MB) | `fonts/multilingual/AnthropicSerifWebText-Multilingual.woff2` (7.0 MB) | 33,897 |
+
+The examples below use **1.1.0 multilingual**. Swap in the `cjk-only`
+filenames if you only need Chinese; every command and CSS declaration is
+otherwise identical. WOFF2 is brotli compressed and is the right choice
+for the web; TTF is convenient for installing on an operating system or
+embedding in a document.
 
 ## Desktop installation
 
@@ -19,10 +23,10 @@ system or embedding in a document.
 - **macOS**: open the TTF with Font Book and click Install Font.
 - **Linux**: copy to `~/.local/share/fonts/`, then run `fc-cache -fv`.
 
-The internal family name is `Anthropic Serif Web Text`. If the original
-Latin font is already installed, installing this composite under the same
-name may cause a conflict; remove or replace the original first, or use a
-renamed build (see [BUILD.md](BUILD.md)).
+The internal family name is `Anthropic Serif Web Text` in **both** builds.
+Do not install both versions at once, and remove the original upstream
+Latin font first if it is already present; otherwise the font cache will
+resolve unpredictably. For a renamed build, see [BUILD.md](BUILD.md).
 
 Verify with:
 
@@ -35,7 +39,7 @@ fc-match "Anthropic Serif Web Text"
 ```css
 @font-face {
   font-family: "Anthropic Serif Web Text";
-  src: url("/fonts/AnthropicSerifWebText-CJK.woff2") format("woff2");
+  src: url("/fonts/AnthropicSerifWebText-Multilingual.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -99,7 +103,7 @@ The full WOFF2 is 6.9 MB. Shipping it to every visitor is wasteful. Use
 `pyftsubset` to keep only the characters a page actually needs:
 
 ```bash
-pyftsubset fonts/AnthropicSerifWebText-CJK.ttf \
+pyftsubset fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf \
   --text-file=content.txt \
   --output-file=subset.woff2 \
   --flavor=woff2 \
@@ -124,7 +128,7 @@ A minimal example for a single multilingual article:
 
 ```bash
 printf '%s' 'Typography 排版设计 Ελληνικά Кириллица 2026' > content.txt
-pyftsubset fonts/AnthropicSerifWebText-CJK.ttf \
+pyftsubset fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf \
   --text-file=content.txt --flavor=woff2 \
   --output-file=article.woff2 --layout-features='*'
 ```

@@ -32,17 +32,21 @@ cannot be merged.
 3. If you changed the build script, rebuild with
    `python3 scripts/build_cjk.py --help` documented parameters and verify
    the result with the checks in [docs/BUILD.md](docs/BUILD.md).
-4. Confirm that the README and the docs still describe the real output:
-   glyph count, code point count, file sizes.
-5. Do not commit binary files other than the two files under `fonts/` and
-   the specimen images under `assets/`. Do not commit credentials, local
-   paths, or generated caches.
-6. Open a pull request describing what changed and how you verified it.
+4. Confirm that the README, `fonts/README.md` and the docs still describe
+   the real output: glyph count, code point count, file sizes.
+5. Do not commit binary files other than the four font files in the two
+   `fonts/` subdirectories and the specimen images under `assets/`. Do not
+   commit credentials, local paths, or generated caches.
+6. **Never overwrite an existing build.** A new version goes into its own
+   `fonts/` subdirectory with its own filenames, its own README row and
+   its own GitHub Release. Both 1.0.0 and 1.1.0 must stay downloadable.
+7. Open a pull request describing what changed and how you verified it.
 
 ## Reporting problems
 
 Use the GitHub issue tracker and include:
 
+- which build you used (`cjk-only` 1.0.0 or `multilingual` 1.1.0);
 - operating system and application, browser, or rendering engine version;
 - the exact text or Unicode code points involved;
 - what you expected and what you saw;

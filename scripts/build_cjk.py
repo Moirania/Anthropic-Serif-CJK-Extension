@@ -15,15 +15,24 @@ Two complementary outline sources are used:
     wght=500 (matching the CJK Medium), glyf outlines. Composite glyphs are
     decomposed and coordinates scaled from 1000 to 2000 UPM.
 
-Typical use:
+Typical use, producing the two independent builds:
 
+    # 1.1.0 multilingual
     python3 scripts/build_cjk.py \
         --latin /path/to/AnthropicSerifWebText.ttf \
         --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
         --lgc-font "/path/to/NotoSerif[wdth,wght].ttf" \
-        --out ./AnthropicSerifWebText-CJK.ttf
+        --out ./fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf
 
-Pass --no-lgc to build the CJK-only variant. Pass --no-cjk to build a
+    # 1.0.0 cjk-only
+    python3 scripts/build_cjk.py \
+        --latin /path/to/AnthropicSerifWebText.ttf \
+        --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
+        --no-lgc \
+        --out ./fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf
+
+The two outputs are independent: run both, or just one. Never write a new
+build over an existing file. Pass --no-cjk to build a
 Latin/Greek/Cyrillic-only extension (useful for testing).
 
 Requires: fontTools, brotli (only for a subsequent WOFF2 conversion).

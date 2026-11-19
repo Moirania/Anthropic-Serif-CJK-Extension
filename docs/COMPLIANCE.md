@@ -114,7 +114,7 @@ pattern instead of shipping the binary files:
 
 1. Publish the build script, all documentation, the specimen images, the
    OFL text and FONTLOG.
-2. Do not commit `fonts/*.ttf` or `fonts/*.woff2`. Add them to
+2. Do not commit `fonts/*/*.ttf` or `fonts/*/*.woff2`. Add them to
    `.gitignore` and remove them from the git history.
 3. In the README, instruct readers to supply their own legally obtained
    copy of the upstream Latin font and to run

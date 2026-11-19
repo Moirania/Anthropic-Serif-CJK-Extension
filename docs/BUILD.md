@@ -27,13 +27,24 @@ repository. Both are under the SIL Open Font License 1.1.
 
 ## Full rebuild
 
+The same script produces both independent builds. Run it twice with
+different output paths; the two runs never touch each other's files.
+
 ```bash
+# 1.1.0 multilingual (default, both sources)
 python3 scripts/build_cjk.py \
   --latin /path/to/AnthropicSerifWebText.ttf \
   --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
   --lgc-font "/path/to/NotoSerif[wdth,wght].ttf" \
   --lgc-weight 500 \
-  --out ./AnthropicSerifWebText-CJK.ttf
+  --out ./fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf
+
+# 1.0.0 cjk-only (skip the LGC source)
+python3 scripts/build_cjk.py \
+  --latin /path/to/AnthropicSerifWebText.ttf \
+  --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
+  --no-lgc \
+  --out ./fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf
 ```
 
 Useful options:
@@ -52,16 +63,27 @@ Useful options:
 | `--no-lgc` | off | Skip the LGC source (CJK-only build) |
 | `--limit` | 0 | Convert only a small sample, for debugging |
 
-A `WOFF2` can then be produced with:
+A `WOFF2` can then be produced for each TTF:
 
 ```bash
 python3 - <<'PY'
 from fontTools.ttLib import TTFont
-f = TTFont("AnthropicSerifWebText-CJK.ttf")
-f.flavor = "woff2"
-f.save("AnthropicSerifWebText-CJK.woff2")
+pairs = [
+    ("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf",
+     "fonts/multilingual/AnthropicSerifWebText-Multilingual.woff2"),
+    ("fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf",
+     "fonts/cjk-only/AnthropicSerifWebText-CJK-Only.woff2"),
+]
+for src, dst in pairs:
+    f = TTFont(src)
+    f.flavor = "woff2"
+    f.save(dst)
 PY
 ```
+
+Keep each pair in its own `fonts/` subdirectory. See
+[../fonts/README.md](../fonts/README.md) for the version comparison and
+for the rule that a new version must never overwrite an existing one.
 
 ## What the script does
 
@@ -118,28 +140,38 @@ Greek and Cyrillic stems consistent with the Chinese. To compare, change
 
 ## Verification checklist
 
+Run the same checks on both builds; only the counts differ.
+
 ```bash
 python3 - <<'PY'
 from fontTools.ttLib import TTFont
-f = TTFont("AnthropicSerifWebText-CJK.ttf")
-print("tables:", sorted(f.keys()))
-print("numGlyphs:", f["maxp"].numGlyphs)
-print("GSUB features:", len(f["GSUB"].table.FeatureList.FeatureRecord))
-print("GPOS features:", len(f["GPOS"].table.FeatureList.FeatureRecord))
-print("cmap:", [(t.platformID, t.platEncID, t.format, len(t.cmap))
-                for t in f["cmap"].tables])
-cm = f.getBestCmap()
-for cp in (0x4E00, 0x2000B, 0x0180, 0x03B1, 0x1F00, 0x0416, 0xA640):
-    print("U+%05X" % cp, cm.get(cp, "MISSING"))
-print("unique glyph names:", len(set(f.getGlyphOrder())) == len(f.getGlyphOrder()))
+
+builds = [
+    ("fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf", 31724, 31595),
+    ("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf", 33897, 33768),
+]
+for path, want_glyphs, want_codes in builds:
+    f = TTFont(path)
+    cm = f.getBestCmap()
+    print(path)
+    print("  glyphs", f["maxp"].numGlyphs, "(expected", want_glyphs, ")")
+    print("  codes ", len(cm), "(expected", want_codes, ")")
+    print("  GSUB", len(f["GSUB"].table.FeatureList.FeatureRecord),
+          "| GPOS", len(f["GPOS"].table.FeatureList.FeatureRecord))
+    print("  cmap", [(t.platformID, t.platEncID, t.format, len(t.cmap))
+                     for t in f["cmap"].tables])
+    print("  unique names", len(set(f.getGlyphOrder())) == len(f.getGlyphOrder()))
+    print("  U+4E00", cm.get(0x4E00), "| U+2000B", cm.get(0x2000B),
+          "| U+03B1", cm.get(0x03B1))
 PY
 ```
 
-Expected: 33,897 glyphs, 19 GSUB features, 2 GPOS features, four cmap
-subtables including a format 12 table with 33,768 entries, and 33,897
-unique glyph names. Render a mixed string such as
-`Typography 排版设计 Ελληνικά Кириллица ﬁ 123` and confirm that `fi`
-still forms a ligature and no tofu boxes appear.
+Expected for 1.0.0: 31,724 glyphs, 31,595 code points, Greek `MISSING`.
+Expected for 1.1.0: 33,897 glyphs, 33,768 code points, Greek resolved.
+Both retain 19 GSUB features, 2 GPOS features and four cmap subtables
+including a format 12 table. Render a mixed string such as
+`Typography 排版设计 Ελληνικά Кириллица ﬁ 123` with 1.1.0 and confirm that
+`fi` still forms a ligature and no tofu boxes appear.
 
 ## Renaming the internal family name
 
@@ -150,7 +182,7 @@ redistribution, rename the internal names before publishing:
 ```python
 from fontTools.ttLib import TTFont
 
-f = TTFont("AnthropicSerifWebText-CJK.ttf")
+f = TTFont("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf")
 n = f["name"]
 for nid, value in (
     (1, "Serif CJK Extension"),

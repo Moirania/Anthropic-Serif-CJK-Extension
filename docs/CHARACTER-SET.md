@@ -4,6 +4,13 @@ This document lists exactly which Unicode ranges were added to the
 original Latin font. Numbers were counted from the two source fonts, minus
 code points the Latin base font already covered.
 
+It describes **1.1.0 multilingual**. The **1.0.0 cjk-only** build contains
+only the CJK rows below: 31,004 added code points, 31,724 glyphs, 31,595
+addressable code points, and 2,306 non-BMP code points. It has no Greek,
+no Cyrillic, no Latin Extended beyond the upstream font's own Latin-1 and
+Latin Extended-A, and no shared LGC marks. See
+[../fonts/README.md](../fonts/README.md) for the side-by-side comparison.
+
 ## Totals
 
 | Metric | Value |
@@ -148,7 +155,7 @@ present.
 ```bash
 python3 - <<'PY'
 from fontTools.ttLib import TTFont
-f = TTFont("fonts/AnthropicSerifWebText-CJK.ttf")
+f = TTFont("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf")
 cm = f.getBestCmap()
 for cp in (0x4E00, 0x9FFF, 0x3400, 0x2000B, 0x3002, 0xFF0C,
            0x0180, 0x03B1, 0x1F00, 0x0416, 0xA640, 0x20AC):
