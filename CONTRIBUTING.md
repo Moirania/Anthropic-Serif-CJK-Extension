@@ -5,10 +5,12 @@ Thanks for taking the time to improve this project.
 ## Before you start
 
 Read [docs/COMPLIANCE.md](docs/COMPLIANCE.md). The font files in `fonts/`
-combine proprietary upstream Latin outlines with SIL OFL 1.1 CJK outlines,
-so any contribution that adds or replaces glyph outlines must state where
-the outlines came from and under which license they are available. Without
-that information a pull request cannot be merged.
+combine proprietary upstream Latin outlines with outlines from two SIL OFL
+1.1 sources (Noto Serif CJK SC for Chinese, Noto Serif for Latin Extended,
+Greek and Cyrillic). Any contribution that adds or replaces glyph outlines
+must state which source was used, which instance weight, and under which
+license the outlines are available. Without that information a pull request
+cannot be merged.
 
 ## Good first contributions
 
@@ -17,8 +19,10 @@ that information a pull request cannot be merged.
 - Fix a typo, a broken relative link, or an unclear sentence in `docs/`.
 - Improve `scripts/build_cjk.py`: better error handling, faster outline
   conversion, extra command line options.
-- Add a specimen image for a script or a language not shown yet.
+- Add a specimen image or a reading sample for a language not shown yet
+  (polytonic Greek, Old Church Slavonic, Vietnamese, IPA transcription).
 - Add a subsetting recipe to [docs/USAGE.md](docs/USAGE.md).
+- Propose an additional Unicode range, with the source font and its license.
 
 ## Pull request process
 

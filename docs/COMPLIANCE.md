@@ -12,10 +12,10 @@ situations:
 | --- | --- | --- |
 | Latin outlines, OpenType tables, metrics, internal name | Anthropic Serif Web Text Regular | Proprietary brand typeface, no public license |
 | Chinese outlines | Noto Serif CJK SC Medium | SIL Open Font License 1.1 |
+| Latin Extended, Greek, Cyrillic and shared marks | Noto Serif, wght=500 | SIL Open Font License 1.1 |
 
-The SIL OFL applies to the Chinese-derived portion. It does not, and
-cannot, relicense the proprietary Latin outlines that are stored in the
-same file.
+The SIL OFL applies to both added portions. It does not, and cannot,
+relicense the proprietary Latin outlines that are stored in the same file.
 
 ## 1. Upstream Latin font
 
@@ -45,22 +45,31 @@ representation is made that upstream permission has been obtained. If you
 plan to use the files in a commercial product, a client deliverable or
 any further redistribution, obtain your own legal confirmation.
 
-## 2. Chinese outlines under SIL OFL 1.1
+## 2. Added outlines under SIL OFL 1.1
 
-Noto Serif CJK SC (Source Han Serif), copyright (c) 2017-2022 Adobe and
-other contributors, is licensed under the SIL Open Font License 1.1.
+Two sources supply the added outlines, both under the SIL Open Font
+License 1.1:
+
+- Noto Serif CJK SC (Source Han Serif), copyright (c) 2014-2022 Adobe and
+  other contributors, for the Chinese glyphs.
+- Noto Serif from [notofonts/latin-greek-cyrillic](https://github.com/notofonts/latin-greek-cyrillic),
+  Copyright 2022 The Noto Project Authors, for Latin Extended, Greek,
+  Cyrillic and the shared marks. It was instanced at wght=500 before use.
+
 The OFL permits use, study, modification, embedding and redistribution,
 including commercial use, subject to these conditions:
 
 1. The copyright notice and the license text must accompany every copy.
-   This repository ships [OFL.txt](../OFL.txt) and records copyright in
-   [FONTLOG.txt](../FONTLOG.txt) and in the font `name` table.
-2. Modified versions must be distributed only under the OFL. The CJK
-   derived portion of this font is therefore OFL 1.1.
+   This repository ships [OFL.txt](../OFL.txt) with both copyright lines,
+   and records them in [FONTLOG.txt](../FONTLOG.txt) and in the font
+   `name` table.
+2. Modified versions must be distributed only under the OFL. All added
+   outlines in this font are therefore OFL 1.1.
 3. The font software may not be sold by itself. Bundling it with software
    is allowed, but the file alone may not be the product.
 4. Reserved Font Names, where declared, must not be used by a modified
-   version. The composite family name does not use "Noto".
+   version. The composite family name uses neither "Noto" nor
+   "Source Han".
 5. The original authors' names may not be used to promote a modified
    version. Credit is given as attribution, not as endorsement.
 
@@ -70,15 +79,17 @@ subject to the OFL.
 
 ## 3. What the SIL OFL does not fix
 
-A common mistake is to assume that because one component is OFL, the whole
-composite becomes open source. It does not. The OFL requires derivative
-versions of the OFL font to stay under the OFL, but the upstream Latin
-outlines are a separate work with a separate rights holder. Combining them
-in one file does not grant a license for the Latin outlines.
+A common mistake is to assume that because the added components are OFL,
+the whole composite becomes open source. It does not. The OFL requires
+derivative versions of the OFL fonts to stay under the OFL, but the
+upstream Latin outlines are a separate work with a separate rights holder.
+Combining them in one file does not grant a license for the Latin outlines.
 
 Conversely, the proprietary upstream font does not remove the OFL
-obligations attached to the Chinese outlines: the copyright notice, the
-license text and the share-alike condition still apply to that portion.
+obligations attached to either added source: the copyright notices, the
+license text and the share-alike condition still apply to those portions.
+Having two OFL sources does not dilute either one; each copyright line must
+be preserved.
 
 ## 4. Internal font names
 
@@ -131,6 +142,10 @@ of the risk.
 - SIL Open Font License 1.1, official text: https://openfontlicense.org/
 - OFL FAQ, modifying and redistributing OFL fonts:
   https://openfontlicense.org/how-to-modify-ofl-fonts
+- Noto Serif (Latin-Greek-Cyrillic) source project:
+  https://github.com/notofonts/latin-greek-cyrillic
+- Noto Serif CJK / Source Han Serif:
+  https://github.com/notofonts/noto-cjk
 - Anthropic Trademark Guidelines: https://www.anthropic.com/brand
 - GitHub Docs, About READMEs:
   https://docs.github.com/repos/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes

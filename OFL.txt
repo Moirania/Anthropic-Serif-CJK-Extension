@@ -1,6 +1,8 @@
-Copyright (c) 2017-2022 Adobe (http://www.adobe.com/).
+Copyright (c) 2014-2022 Adobe (http://www.adobe.com/), for Noto Serif CJK SC.
+Copyright 2022 The Noto Project Authors
+(https://github.com/notofonts/latin-greek-cyrillic), for Noto Serif.
 Copyright (c) 2026 Moirania (https://github.com/Moirania/Anthropic-Serif-CJK-Extension),
-for CJK glyph conversion, metric unification and composite assembly.
+for glyph conversion, metric unification and composite assembly.
 
 Scope note: this license applies to the CJK-derived outlines and their
 derivatives. The proprietary upstream Latin outlines in the same font

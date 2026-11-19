@@ -1,6 +1,15 @@
 FONTLOG for Anthropic Serif CJK Extension
 ==========================================
 
+Version history
+---------------
+
+  1.000  2026-11-19  Initial CJK-only extension (31,004 code points).
+  1.100  2026-11-19  Added Latin Extended, Greek and Cyrillic coverage
+                      (2,173 further code points). This entry documents
+                      both releases; the section "Version 1.100 additions"
+                      below records only the newer changes.
+
 This file records the changes made to the font software, following the
 convention recommended by the SIL Open Font License FAQ for modified
 fonts. It is part of the font release package together with OFL.txt.
@@ -67,15 +76,84 @@ Copyright (c) 2026 Moirania, for the changes listed below.
 - Wrote scripts/build_cjk.py so that every step above is reproducible.
 
 
+Version 1.100 additions (Latin Extended, Greek, Cyrillic)
+----------------------------------------------------------
+
+Copyright (c) 2026 Moirania, for the changes listed below.
+
+New source material:
+
+3. Latin Extended, Greek and Cyrillic outlines:
+   Noto Serif variable font from notofonts/latin-greek-cyrillic,
+   Copyright 2022 The Noto Project Authors
+   (https://github.com/notofonts/latin-greek-cyrillic), released under the
+   SIL Open Font License, Version 1.1. 3,830 glyphs, 2,965 cmap code
+   points, 1000 units per em, glyf outlines with wght 100-900 and wdth
+   62.5-100 axes.
+
+Changes:
+
+- Instanced the variable font at wght=500 with wdth at its default 100.
+  This matches the wght=500 of the CJK Medium source and keeps stem weight
+  consistent across all added scripts. HVAR deltas are applied to hmtx by
+  the instancer.
+
+- Selected 2,173 further code points: 1,018 Latin Extended (including IPA,
+  phonetic extensions and Extended-B through G), 354 Greek (including
+  Greek Extended / polytonic), 441 Cyrillic (including Supplement and
+  Extended-A/B/C), and 360 shared supporting marks (combining diacritics,
+  spacing modifiers, general punctuation, superscripts, currency,
+  letterlike symbols, number forms). The upstream Latin font already
+  carried Latin-1 Supplement and Latin Extended-A almost in full, so those
+  blocks were left untouched. See docs/CHARACTER-SET.md for the breakdown.
+
+- Expanded composite glyphs with DecomposingRecordingPen, then scaled all
+  coordinates from 1000 to 2000 units per em with TransformPen and rebuilt
+  each glyph with TTGlyphPen. Decomposing removes the dependency on source
+  component glyph names and prevents name collisions with the CJK uniXXXX
+  names; the generated names use an lgcXXXX prefix.
+
+- Took proportional advances from the instanced source and scaled them by
+  2. The upstream Latin advances, side bearings, baseline, ascender,
+  descender and cap/x heights were again left untouched.
+
+- Continued to append every new glyph after all existing ones. The 720
+  upstream glyph ids and all 19 GSUB / 2 GPOS lookups remain valid.
+
+- Extended the format 12 cmap subtable to 33,768 entries. It now also
+  carries the non-BMP Latin Extended-F (U+10780-U+107BF) and
+  Latin Extended-G (U+1DF00-U+1DFFF) ranges, in addition to the CJK
+  Extensions B through I. The four original cmap subtables remain intact.
+
+- Recomputed maxp, hhea, head bounding box, OS/2 Unicode ranges and the
+  name table. Added the Noto Project Authors copyright line to nameID 0,
+  updated the version string to 1.100, and refreshed OFL.txt, LICENSE and
+  docs/COMPLIANCE.md with the second OFL source.
+
+- Rebuilt the WOFF2 and produced assets/multilingual-specimen.png showing
+  Latin Extended, polytonic Greek, Cyrillic extensions, CJK and a mixed
+  line in one frame.
+
+Final metrics: 33,897 glyphs, 33,768 addressable code points, 2,394
+non-BMP code points, highest code point U+3106C.
+
+
 Known limitations
 -----------------
 
-- The CJK outlines are matched to the Latin font by optical weight and
-  metric alignment, not redrawn stroke by stroke. Stroke detail remains
-  recognisably that of Source Han Serif.
+- The added outlines are matched to the Latin font by optical weight and
+  metric alignment, not redrawn stroke by stroke. Chinese retains Source
+  Han Serif stroke detail; Greek, Cyrillic and Latin Extended retain Noto
+  Serif detail. The two families share a design language but are not
+  identical to the Anthropic Latin letterforms.
 
 - Converting CFF to TrueType quadratic outlines discards the native CFF
-  hinting. Very small on-screen sizes may appear slightly softer.
+  hinting, and decomposing the LGC composites discards their hinting
+  instructions. Very small on-screen sizes may appear slightly softer.
+
+- The original GSUB/GPOS lookups cover Latin only. Greek and Cyrillic get
+  correct glyphs and advances but not Latin kerning pairs or
+  language-specific substitutions.
 
 - The internal family name is still "Anthropic Serif Web Text" so that the
   composite can replace the original font in an existing document. For a
@@ -89,7 +167,7 @@ Known limitations
 License of the changes
 ----------------------
 
-The CJK-derived portion of the font software, including these changes, is
+All added outlines and their derivatives, from both OFL sources, are
 distributed under the SIL Open Font License, Version 1.1 (see OFL.txt).
 The upstream Latin outlines remain proprietary and are not relicensed.
 See LICENSE and docs/COMPLIANCE.md.

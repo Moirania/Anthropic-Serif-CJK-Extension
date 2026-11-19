@@ -4,12 +4,13 @@
 
 | File | Size | Use |
 | --- | --- | --- |
-| `fonts/AnthropicSerifWebText-CJK.ttf` | 15.3 MB | Desktop, print, PDF embedding |
+| `fonts/AnthropicSerifWebText-CJK.ttf` | 15.6 MB | Desktop, print, PDF embedding |
 | `fonts/AnthropicSerifWebText-CJK.woff2` | 6.9 MB | Web pages |
 
-Both files contain the same 31,724 glyphs. WOFF2 is brotli compressed and
-is the right choice for the web; TTF is convenient for installing on an
-operating system or embedding in a document.
+Both files contain the same 33,897 glyphs covering CJK, Latin Extended,
+Greek, Cyrillic and shared marks. WOFF2 is brotli compressed and is the
+right choice for the web; TTF is convenient for installing on an operating
+system or embedding in a document.
 
 ## Desktop installation
 
@@ -47,9 +48,23 @@ article {
 }
 ```
 
-Because Chinese and Latin live in the same file, no fallback stack is
-needed for Chinese text. A fallback family is still useful for glyphs the
-font does not cover, such as emoji or Hangul.
+Because CJK, Greek and Cyrillic live in the same file, no fallback stack is
+needed for those scripts. A fallback family is still useful for glyphs the
+font does not cover, such as emoji, Hangul or mathematical operators.
+
+## Multilingual example
+
+```html
+<p lang="zh">《庄子》曰：「天地与我并生，而万物与我为一。」</p>
+<p lang="el">Ἀπὸ τὴν ἀρχὴ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν.</p>
+<p lang="ru">В начале было Слово, и Слово было у Бога.</p>
+<p lang="la">Ā ā Ă ă Æ æ Ø ø Ł ł Ș Ț ẞ — ﬁde et amōre.</p>
+<p>Typography 排版設計 Ελληνικά Кириллица ﬁ 123</p>
+```
+
+Polytonic Greek (U+1F00–U+1FFF) and Cyrillic Extended-A/B/C are covered,
+so classical Greek and older Slavic orthographies render without tofu
+boxes. Combining marks (U+0300–U+036F) are included for decomposed accents.
 
 ## OpenType features preserved
 
@@ -74,6 +89,10 @@ Example:
 .heading { font-feature-settings: "dlig" 1, "case" 1; }
 ```
 
+These features were authored for the upstream Latin glyphs. Greek and
+Cyrillic glyphs are correctly shaped and spaced but are not included in the
+Latin kerning pairs or language-specific substitutions.
+
 ## Subsetting for production
 
 The full WOFF2 is 6.9 MB. Shipping it to every visitor is wasteful. Use
@@ -91,19 +110,20 @@ pyftsubset fonts/AnthropicSerifWebText-CJK.ttf \
 Notes:
 
 - `--text-file` should contain every character that can appear on the
-  page, including punctuation and digits.
+  page, including punctuation, digits, Greek accents and Cyrillic letters.
 - `--layout-features='*'` keeps the ligature and kerning tables. Without
   it, `fi` and kerning pairs may be dropped.
 - For dynamic user-generated content, either generate subsets per page
-  build, or use a unicode-range split: one small Latin subset plus CJK
-  chunks of a few thousand code points each.
-- Do not drop the format 12 cmap subtable if your content uses rare
-  characters from Extensions B through I.
+  build, or use a `unicode-range` split: one small Latin subset plus CJK
+  chunks of a few thousand code points each, and separate Greek/Cyrillic
+  chunks if those languages are used.
+- Do not drop the format 12 cmap subtable if your content uses rare CJK
+  characters from Extensions B through I or Latin Extended-F/G.
 
-A minimal example for a single article:
+A minimal example for a single multilingual article:
 
 ```bash
-printf '%s' 'Typography 排版设计 — 中文与西文混排 2026' > content.txt
+printf '%s' 'Typography 排版设计 Ελληνικά Кириллица 2026' > content.txt
 pyftsubset fonts/AnthropicSerifWebText-CJK.ttf \
   --text-file=content.txt --flavor=woff2 \
   --output-file=article.woff2 --layout-features='*'
@@ -112,17 +132,20 @@ pyftsubset fonts/AnthropicSerifWebText-CJK.ttf \
 ## Rendering notes
 
 - The font uses 2000 units per em with ascender 1985 and descender -515.
-  Very tight line-height values can clip CJK glyph tops; 1.5 or greater is
-  comfortable for mixed text.
-- Chinese glyphs are full width (2000 units). Latin glyphs keep their
-  original proportional advances, so mixed paragraphs need no special
+  Very tight line-height values can clip CJK glyph tops and polytonic Greek
+  accents; 1.6 or greater is comfortable for mixed text.
+- Chinese glyphs are full width (2000 units). Latin, Greek and Cyrillic
+  glyphs keep proportional advances, so mixed paragraphs need no special
   letter-spacing.
-- CFF hinting was lost during conversion to TrueType outlines. At very
-  small sizes on low-density screens, text may appear slightly softer than
-  a native CFF font.
+- CFF hinting was lost during conversion, and LGC composites were
+  decomposed. At very small sizes on low-density screens, text may appear
+  slightly softer than a native hinted font.
 - CJK vertical typesetting features are not added. The vertical forms
   block is covered as characters, not as a full vertical layout
   implementation.
+- The global `head` bounding box is wider than the vertical metrics because
+  a few combining marks extend far above or below the em box. This does not
+  change `hhea` ascent/descent, so line height stays stable.
 
 ## PDF and document embedding
 
@@ -136,6 +159,7 @@ font.
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | Chinese still shows boxes | Original font still selected | Remove the old font or clear the font cache |
+| Greek accents or Cyrillic letters missing | Client ignores format 12 cmap | Use a modern browser or include the range in a subset |
 | `fi` no longer joins | Subset dropped layout features | Rebuild subset with `--layout-features='*'` |
-| Rare Extension B characters missing | Client ignores format 12 cmap | Use a modern browser or a subset that includes them |
 | Very large page weight | Full WOFF2 served | Generate a subset as shown above |
+| Polytonic Greek accents clipped | Line height too tight | Raise `line-height` to 1.6 or more |

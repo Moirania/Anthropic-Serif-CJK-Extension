@@ -39,15 +39,22 @@ below. They are documents created with the font, not font software, and
 therefore are not themselves subject to the SIL Open Font License.
 
 
-2. CJK glyph outlines (SIL Open Font License 1.1)
--------------------------------------------------
+2. Added glyph outlines (SIL Open Font License 1.1)
+----------------------------------------------------
 
-The Chinese glyph outlines in fonts/ are derived from Noto Serif CJK SC
-Medium (Source Han Serif), copyright (c) 2017-2022 Adobe
-(http://www.adobe.com/) and other contributors, licensed under the SIL
-Open Font License, Version 1.1.
+Two OFL-licensed sources supply the added outlines in fonts/:
 
-The complete license text is in OFL.txt. In summary, the OFL requires:
+  a) Chinese: Noto Serif CJK SC Medium (Source Han Serif),
+     copyright (c) 2014-2022 Adobe (http://www.adobe.com/) and other
+     contributors.
+
+  b) Latin Extended, Greek and Cyrillic: Noto Serif from the
+     notofonts/latin-greek-cyrillic project, Copyright 2022 The Noto
+     Project Authors (https://github.com/notofonts/latin-greek-cyrillic).
+
+Both are licensed under the SIL Open Font License, Version 1.1. The
+complete license text and both copyright lines are in OFL.txt. In summary,
+the OFL requires:
 
   - the copyright notice and the license text accompany any copy;
   - modified versions are distributed only under the OFL;
@@ -55,13 +62,14 @@ The complete license text is in OFL.txt. In summary, the OFL requires:
   - Reserved Font Names, where declared, are not used by derivatives;
   - the original authors' names are not used to promote a modified version.
 
-The conversion from CFF cubic outlines to TrueType quadratic outlines,
-the scaling to 2000 units per em, the metric unification and the composite
-assembly were added for this project (c) 2026 Moirania, as recorded in
-FONTLOG.txt.
+The conversion from CFF cubic outlines to TrueType quadratic outlines, the
+variable font instancing at wght=500, the decomposition of composite LGC
+glyphs, the scaling to 2000 units per em, the metric unification and the
+composite assembly were added for this project (c) 2026 Moirania, as
+recorded in FONTLOG.txt.
 
-The Reserved Font Name "Noto" is not used as the family name of this
-composite font.
+The Reserved Font Names "Noto" and "Source Han" are not used as the family
+name of this composite font.
 
 
 3. Upstream Latin outlines (proprietary, NOT open source)

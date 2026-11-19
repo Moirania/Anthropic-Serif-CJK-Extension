@@ -1,40 +1,53 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Extend a Latin TrueType font with a complete CJK character set.
+Extend a Latin TrueType font with CJK, Latin Extended, Greek and Cyrillic.
 
-The Latin font is used as the base: every original glyph id, advance,
-metric and OpenType layout lookup is preserved. CJK outlines are taken
-from a Noto Serif CJK SC face, converted from CFF cubic curves to
-TrueType quadratic curves, scaled to the Latin font's units per em, and
-appended at the end of the glyph order.
+The Latin font is the base: every original glyph id, advance, metric and
+OpenType layout lookup is preserved. New glyphs are always APPENDED, never
+inserted, so existing GSUB/GPOS lookups keep pointing at the right glyphs.
+
+Two complementary outline sources are used:
+
+  * CJK: Noto Serif CJK SC (Source Han Serif), CFF cubic outlines. Converted
+    with cu2qu to TrueType quadratics, scaled from 1000 to 2000 UPM.
+  * Latin Extended / Greek / Cyrillic: Noto Serif variable font, instanced at
+    wght=500 (matching the CJK Medium), glyf outlines. Composite glyphs are
+    decomposed and coordinates scaled from 1000 to 2000 UPM.
 
 Typical use:
 
     python3 scripts/build_cjk.py \
         --latin /path/to/AnthropicSerifWebText.ttf \
         --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
+        --lgc-font "/path/to/NotoSerif[wdth,wght].ttf" \
         --out ./AnthropicSerifWebText-CJK.ttf
 
-Requires: fontTools (and brotli only if you also produce a WOFF2).
-The CJK source is licensed under the SIL Open Font License 1.1; see
-OFL.txt and FONTLOG.txt. The upstream Latin font is proprietary and is
-not relicensed by this script. See docs/COMPLIANCE.md.
+Pass --no-lgc to build the CJK-only variant. Pass --no-cjk to build a
+Latin/Greek/Cyrillic-only extension (useful for testing).
+
+Requires: fontTools, brotli (only for a subsequent WOFF2 conversion).
+Both outline sources are under the SIL Open Font License 1.1; see OFL.txt
+and FONTLOG.txt. The upstream Latin font is proprietary and is NOT
+relicensed by this script. See docs/COMPLIANCE.md.
 """
 import argparse
 import os
 import sys
 import time
 
-from fontTools.ttLib import TTCollection, TTFont, newTable
+from fontTools.ttLib import TTCollection, TTFont
+from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
 from fontTools.pens.cu2quPen import Cu2QuPen
+from fontTools.pens.recordingPen import DecomposingRecordingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
-from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+from fontTools.varLib.instancer import instantiateVariableFont
 
 
-# Chinese-related Unicode ranges. Kana, Hangul, Cyrillic and Greek are
-# intentionally excluded: this is a Chinese extension of a Latin font.
+# ------------------------------------------------------------------ ranges
+# Chinese-related ranges. Kana, Hangul, Greek and Cyrillic are excluded here
+# because they are either out of scope or supplied by the dedicated LGC font.
 CJK_RANGES = (
     (0x2E80, 0x2FDF),    # CJK radicals supplement, Kangxi radicals
     (0x2FF0, 0x2FFF),    # ideographic description characters
@@ -53,21 +66,46 @@ CJK_RANGES = (
     (0x30000, 0x323AF),  # extensions G through I
 )
 
+# Latin Extended, Greek, Cyrillic and the shared marks needed to typeset them.
+# (name, start, end, group)
+LGC_RANGES = (
+    ("Latin-1 Supplement",              0x0080, 0x00FF, "latin"),
+    ("Latin Extended-A",               0x0100, 0x017F, "latin"),
+    ("Latin Extended-B",               0x0180, 0x024F, "latin"),
+    ("IPA Extensions",                 0x0250, 0x02AF, "latin"),
+    ("Phonetic Extensions",            0x1D00, 0x1D7F, "latin"),
+    ("Phonetic Extensions Supplement", 0x1D80, 0x1DBF, "latin"),
+    ("Latin Extended Additional",      0x1E00, 0x1EFF, "latin"),
+    ("Latin Extended-C",               0x2C60, 0x2C7F, "latin"),
+    ("Latin Extended-D",               0xA720, 0xA7FF, "latin"),
+    ("Latin Extended-E",               0xAB30, 0xAB6F, "latin"),
+    ("Latin Extended-F",               0x10780, 0x107BF, "latin"),
+    ("Latin Extended-G",               0x1DF00, 0x1DFFF, "latin"),
+    ("Greek and Coptic",               0x0370, 0x03FF, "greek"),
+    ("Greek Extended",                 0x1F00, 0x1FFF, "greek"),
+    ("Cyrillic",                       0x0400, 0x04FF, "cyrillic"),
+    ("Cyrillic Supplement",            0x0500, 0x052F, "cyrillic"),
+    ("Cyrillic Extended-A",            0x2DE0, 0x2DFF, "cyrillic"),
+    ("Cyrillic Extended-B",            0xA640, 0xA69F, "cyrillic"),
+    ("Cyrillic Extended-C",            0x1C80, 0x1C8F, "cyrillic"),
+    ("Combining Diacritical Marks",    0x0300, 0x036F, "support"),
+    ("Spacing Modifier Letters",       0x02B0, 0x02FF, "support"),
+    ("General Punctuation",            0x2000, 0x206F, "support"),
+    ("Superscripts and Subscripts",    0x2070, 0x209F, "support"),
+    ("Currency Symbols",               0x20A0, 0x20CF, "support"),
+    ("Letterlike Symbols",             0x2100, 0x214F, "support"),
+    ("Number Forms",                   0x2150, 0x218F, "support"),
+)
+
 DEBUG_SAMPLE = (
     0x4E00, 0x4E2D, 0x6587, 0x5B57, 0x6392, 0x7248, 0x8BBE, 0x8BA1,
     0x4E16, 0x754C, 0x4F60, 0x597D, 0x3002, 0xFF0C, 0x3001, 0xFF1A,
+    0x0100, 0x03B1, 0x0416, 0x1F00,
 )
 
 
-def is_cjk(cp):
-    return any(lo <= cp <= hi for lo, hi in CJK_RANGES)
-
-
-def glyph_name(cp, used):
-    name = ("uni%04X" % cp) if cp <= 0xFFFF else ("u%X" % cp)
-    if name in used:
-        name = "cjk%X" % cp
-    return name
+def in_ranges(cp, ranges):
+    return any(lo <= cp <= hi for lo, hi in ranges)
 
 
 def set_name(font, name_id, value):
@@ -88,25 +126,104 @@ def rename_family(font, family):
         set_name(font, nid, value)
 
 
+def add_cjk_glyphs(base, used, glyf, hmtx, cjk, scale, max_err, todo, prefix=""):
+    """CFF cubic charstrings -> TrueType quadratic glyphs."""
+    cmap = cjk.getBestCmap()
+    charstrings = cjk["CFF "].cff.topDictIndex[0].CharStrings
+    new_names, new_cps, failed = [], {}, []
+    for i, cp in enumerate(todo):
+        src_name = cmap[cp]
+        pen = TTGlyphPen(None)
+        cu = Cu2QuPen(TransformPen(pen, (scale, 0, 0, scale, 0, 0)),
+                      max_err=max_err, reverse_direction=True)
+        try:
+            charstrings[src_name].draw(cu)
+            glyph = pen.glyph()
+            glyph.recalcBounds(None)
+        except Exception as exc:
+            failed.append((hex(cp), type(exc).__name__, str(exc)[:80]))
+            continue
+        name = ("uni%04X" % cp) if cp <= 0xFFFF else ("u%X" % cp)
+        if name in used:
+            name = "x%X" % cp
+        used.add(name)
+        glyf.glyphs[name] = glyph
+        advance = int(round(cjk["hmtx"][src_name][0] * scale))
+        lsb = glyph.xMin if glyph.numberOfContours > 0 else 0
+        hmtx.metrics[name] = (advance, lsb)
+        new_names.append(name)
+        new_cps[cp] = name
+        if (i + 1) % 5000 == 0:
+            print("  CJK converted %d / %d" % (i + 1, len(todo)))
+    return new_names, new_cps, failed
+
+
+def add_lgc_glyphs(base, used, glyf, hmtx, lgc, scale, todo):
+    """Decompose composite glyf outlines and scale them to the base UPM."""
+    cmap = lgc.getBestCmap()
+    glyph_set = lgc.getGlyphSet()
+    new_names, new_cps, failed = [], {}, []
+    dedup = {}  # source glyph name -> generated name, for shared cmap entries
+    for i, cp in enumerate(todo):
+        src_name = cmap[cp]
+        if src_name in dedup:
+            new_cps[cp] = dedup[src_name]
+            continue
+        pen = TTGlyphPen(None)
+        transform = TransformPen(pen, (scale, 0, 0, scale, 0, 0))
+        decompose = DecomposingRecordingPen(glyph_set)
+        try:
+            glyph_set[src_name].draw(decompose)
+            decompose.replay(transform)
+            glyph = pen.glyph()
+            glyph.recalcBounds(None)
+        except Exception as exc:
+            failed.append((hex(cp), type(exc).__name__, str(exc)[:80]))
+            continue
+        # A fixed prefix keeps these names from colliding with CJK uniXXXX.
+        name = "lgc%X" % cp
+        if name in used:
+            name = "x%X" % cp
+        used.add(name)
+        dedup[src_name] = name
+        glyf.glyphs[name] = glyph
+        advance = int(round(lgc["hmtx"][src_name][0] * scale))
+        lsb = glyph.xMin if glyph.numberOfContours > 0 else 0
+        hmtx.metrics[name] = (advance, lsb)
+        new_names.append(name)
+        new_cps[cp] = name
+        if (i + 1) % 1000 == 0:
+            print("  LGC converted %d / %d" % (i + 1, len(todo)))
+    return new_names, new_cps, failed
+
+
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--latin", required=True, help="upstream Latin TTF")
-    ap.add_argument("--cjk-ttc", required=True, help="Noto Serif CJK TTC or OTF")
+    ap.add_argument("--cjk-ttc", default=None, help="Noto Serif CJK TTC or OTF")
     ap.add_argument("--cjk-face", type=int, default=2,
                     help="TTC face index, 2 = Simplified Chinese (default)")
+    ap.add_argument("--lgc-font", default=None,
+                    help="Noto Serif variable font for Latin/Greek/Cyrillic")
+    ap.add_argument("--lgc-weight", type=float, default=500,
+                    help="instance wght of the LGC source (default 500)")
     ap.add_argument("--out", required=True, help="output TTF path")
     ap.add_argument("--max-err", type=float, default=0.5,
-                    help="cu2qu maximum error in source units (default 0.5)")
+                    help="cu2qu max error in source units (default 0.5)")
     ap.add_argument("--family-name", default=None,
                     help="replace internal family names (conservative builds)")
+    ap.add_argument("--no-cjk", action="store_true", help="skip the CJK source")
+    ap.add_argument("--no-lgc", action="store_true", help="skip the LGC source")
     ap.add_argument("--limit", type=int, default=0,
                     help="convert only a small sample, for debugging")
     args = ap.parse_args()
 
-    for path in (args.latin, args.cjk_ttc):
-        if not os.path.isfile(path):
+    for path in (args.latin, args.cjk_ttc, args.lgc_font):
+        if path and not os.path.isfile(path):
             sys.exit("input file not found: %s" % path)
+    if (args.no_cjk or args.cjk_ttc is None) and (args.no_lgc or args.lgc_font is None):
+        sys.exit("nothing to do: provide --cjk-ttc and/or --lgc-font")
 
     t0 = time.time()
     base = TTFont(args.latin)
@@ -117,76 +234,89 @@ def main():
           (base["name"].getDebugName(1) or "(unnamed)", upem,
            len(orig_order), len(orig_cps)))
 
-    if args.cjk_ttc.lower().endswith(".ttc"):
-        cjk = TTCollection(args.cjk_ttc, lazy=False).fonts[args.cjk_face]
-    else:
-        cjk = TTFont(args.cjk_ttc)
-    cjk_upem = cjk["head"].unitsPerEm
-    scale = upem / cjk_upem
-    cjk_cmap = cjk.getBestCmap()
-    charstrings = cjk["CFF "].cff.topDictIndex[0].CharStrings
-    print("CJK source: %s | upem %d | scale %.3f" %
-          (cjk["name"].getDebugName(1) or "(unnamed)", cjk_upem, scale))
-
-    todo = sorted(cp for cp in cjk_cmap if is_cjk(cp) and cp not in orig_cps)
-    if args.limit:
-        todo = [cp for cp in DEBUG_SAMPLE if cp in cjk_cmap and cp not in orig_cps]
-    print("CJK code points to add: %d" % len(todo))
-
     glyf = base["glyf"]
     hmtx = base["hmtx"]
     for name in orig_order:
         _ = glyf[name]  # force decoding of lazy glyph data
     used = set(orig_order)
-    new_names, new_cps, failed = [], {}, []
+    all_new, all_cps = [], {}
 
-    for i, cp in enumerate(todo):
-        cjk_name = cjk_cmap[cp]
-        pen = TTGlyphPen(None)
-        cu = Cu2QuPen(TransformPen(pen, (scale, 0, 0, scale, 0, 0)),
-                      max_err=args.max_err, reverse_direction=True)
-        try:
-            charstrings[cjk_name].draw(cu)
-            glyph = pen.glyph()
-            glyph.recalcBounds(None)
-        except Exception as exc:
-            failed.append((hex(cp), type(exc).__name__, str(exc)[:80]))
-            continue
-        name = glyph_name(cp, used)
-        used.add(name)
-        glyf.glyphs[name] = glyph
-        advance = int(round(cjk["hmtx"][cjk_name][0] * scale))
-        lsb = glyph.xMin if glyph.numberOfContours > 0 else 0
-        hmtx.metrics[name] = (advance, lsb)
-        new_names.append(name)
-        new_cps[cp] = name
-        if (i + 1) % 5000 == 0:
-            print("  converted %d / %d (%.1fs)" %
-                  (i + 1, len(todo), time.time() - t0))
-    print("converted %d, failed %d %s" %
-          (len(new_names), len(failed), failed[:5]))
-    if not new_names:
+    # ---------------------------------------------------------------- CJK
+    if not args.no_cjk and args.cjk_ttc:
+        if args.cjk_ttc.lower().endswith(".ttc"):
+            cjk = TTCollection(args.cjk_ttc, lazy=False).fonts[args.cjk_face]
+        else:
+            cjk = TTFont(args.cjk_ttc)
+        scale = upem / cjk["head"].unitsPerEm
+        print("CJK source: %s | upem %d | scale %.3f" %
+              (cjk["name"].getDebugName(1) or "(unnamed)",
+               cjk["head"].unitsPerEm, scale))
+        cjk_todo = sorted(cp for cp in cjk.getBestCmap()
+                          if in_ranges(cp, CJK_RANGES) and cp not in orig_cps)
+        if args.limit:
+            cjk_todo = [cp for cp in DEBUG_SAMPLE
+                        if cp in cjk.getBestCmap() and cp not in orig_cps]
+        print("CJK code points to add: %d" % len(cjk_todo))
+        names, mapping, failed = add_cjk_glyphs(
+            base, used, glyf, hmtx, cjk, scale, args.max_err, cjk_todo)
+        print("CJK converted %d, failed %d %s" % (len(names), len(failed), failed[:5]))
+        all_new += names
+        all_cps.update(mapping)
+
+    # ------------------------------------------------------- LGC (Lat/Grk/Cyr)
+    lgc = None
+    if not args.no_lgc and args.lgc_font:
+        vf = TTFont(args.lgc_font, lazy=False)
+        if "fvar" in vf:
+            loc = {"wght": args.lgc_weight}
+            for axis in vf["fvar"].axes:
+                if axis.axisTag == "wdth":
+                    loc["wdth"] = axis.defaultValue
+            lgc = instantiateVariableFont(vf, loc, inplace=False, optimize=True)
+            print("LGC source: %s | instanced %s" %
+                  (vf["name"].getDebugName(1) or "(unnamed)", loc))
+        else:
+            lgc = vf
+            print("LGC source: %s (static)" % (vf["name"].getDebugName(1) or "(unnamed)"))
+        scale = upem / lgc["head"].unitsPerEm
+        lgc_cmap = lgc.getBestCmap()
+        lgc_todo = sorted(cp for cp in lgc_cmap
+                          if in_ranges(cp, [(a, b) for _, a, b, _ in LGC_RANGES])
+                          and cp not in orig_cps and cp not in all_cps)
+        if args.limit:
+            lgc_todo = [cp for cp in DEBUG_SAMPLE
+                        if cp in lgc_cmap and cp not in orig_cps][:4]
+        print("LGC code points to add: %d" % len(lgc_todo))
+        names, mapping, failed = add_lgc_glyphs(
+            base, used, glyf, hmtx, lgc, scale, lgc_todo)
+        print("LGC converted %d, failed %d %s" % (len(names), len(failed), failed[:5]))
+        all_new += names
+        all_cps.update(mapping)
+
+    if not all_new:
         sys.exit("no glyphs produced")
+    print("total new glyphs: %d" % len(all_new))
 
     # Append only: all original glyph ids stay valid, so GSUB/GPOS survive.
-    base.setGlyphOrder(orig_order + new_names)
-    total = len(orig_order) + len(new_names)
+    base.setGlyphOrder(orig_order + all_new)
+    total = len(orig_order) + len(all_new)
     base["maxp"].numGlyphs = total
     base["hhea"].numberOfHMetrics = total
 
     # BMP characters go into the existing format 4 subtables.
     for sub in base["cmap"].tables:
         if sub.format in (4, 6) and sub.platformID in (0, 3):
-            for cp, name in new_cps.items():
+            for cp, name in all_cps.items():
                 if cp <= 0xFFFF:
                     sub.cmap[cp] = name
 
-    # A format 12 subtable is required for non-BMP extensions B through I.
+    # Format 12 carries every code point, including non-BMP CJK extensions
+    # and the Latin Extended-F/G planes.
     full = {}
     for sub in base["cmap"].tables:
         if sub.platformID in (0, 3) and not (sub.platformID == 3 and sub.platEncID == 10):
             full.update(sub.cmap)
-    full.update(new_cps)
+    full.update(all_cps)
     sub12 = CmapSubtable.newSubtable(12)
     sub12.platformID, sub12.platEncID = 3, 10
     sub12.format, sub12.language = 12, 0
@@ -214,21 +344,26 @@ def main():
     except Exception as exc:
         print("hhea recalc skipped:", exc)
 
-    # OFL attribution for the CJK-derived outlines.
-    copyright_cjk = str(cjk["name"].getDebugName(0) or "")
-    license_desc = str(cjk["name"].getDebugName(13) or
-                       "SIL Open Font License, Version 1.1")
-    license_url = str(cjk["name"].getDebugName(14) or
-                      "https://openfontlicense.org/")
-    set_name(base, 0,
-             "CJK glyph outlines: " + copyright_cjk +
-             " Licensed under the SIL Open Font License, Version 1.1. "
-             "This font is a modified composite; the Reserved Font Name "
-             "'Noto' is not used. Upstream Latin outlines are proprietary "
-             "and are not relicensed.")
-    set_name(base, 5, "Version 1.001 CJK")
+    # ------------------------------------------------------------ attribution
+    copyright_cjk = ""
+    if not args.no_cjk and args.cjk_ttc:
+        copyright_cjk = str(cjk["name"].getDebugName(0) or "")
+    copyright_lgc = ""
+    if lgc is not None:
+        copyright_lgc = str(lgc["name"].getDebugName(0) or "")
+    notice = ("CJK glyph outlines: " + copyright_cjk +
+              " Latin Extended, Greek and Cyrillic outlines: " + copyright_lgc +
+              " Both licensed under the SIL Open Font License, Version 1.1. "
+              "This font is a modified composite; Reserved Font Names "
+              "'Noto' and 'Source Han' are not used. Upstream Latin outlines "
+              "are proprietary and are not relicensed.")
+    set_name(base, 0, notice)
+    set_name(base, 5, "Version 1.100 CJK-LGC")
+    license_desc = "SIL Open Font License, Version 1.1"
+    if lgc is not None:
+        license_desc = str(lgc["name"].getDebugName(13) or license_desc)
     set_name(base, 13, license_desc)
-    set_name(base, 14, license_url)
+    set_name(base, 14, "https://openfontlicense.org/")
 
     if args.family_name:
         rename_family(base, args.family_name)

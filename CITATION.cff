@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this font, cite it as below."
 title: "Anthropic Serif CJK Extension"
-abstract: "A CJK character set extension for Anthropic Serif Web Text Regular, adding 31,004 Chinese code points while preserving the original Latin outlines and OpenType layout features. The upstream Latin outlines are proprietary; the CJK-derived outlines are under SIL OFL 1.1; documentation and scripts are under MIT. See LICENSE."
+abstract: "A multilingual character set extension for Anthropic Serif Web Text Regular, adding 31,004 CJK code points plus Latin Extended, Greek, Cyrillic and shared marks (2,173 further code points), for 33,897 glyphs in total. Original Latin outlines and OpenType layout features are preserved. The upstream Latin outlines are proprietary; all added outlines are under SIL OFL 1.1; documentation and scripts are under MIT. See LICENSE."
 authors:
   - family-names: "Lin"
     given-names: "Yingxue"
@@ -16,8 +16,12 @@ keywords:
   - fonts
   - typography
   - cjk
-  - chinese
+  - chinese-fonts
+  - greek
+  - cyrillic
+  - latin-extended
   - fonttools
+  - sil-ofl
   - unicode
-version: "1.0.0"
+version: "1.1.0"
 date-released: "2026-11-19"
