@@ -2,14 +2,24 @@
 
 ## Files
 
-Three independent builds are shipped. Pick one; see
+Four independent builds are shipped. Pick one; see
 [../fonts/README.md](../fonts/README.md) for the full comparison.
 
 | Version | TTF | WOFF2 | Glyphs |
 | --- | --- | --- | --- |
 | 1.0.0 cjk-only | `fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf` (15.3 MB) | `fonts/cjk-only/AnthropicSerifWebText-CJK-Only.woff2` (6.9 MB) | 31,724 |
+| 1.0.0-bold cjk-only-bold | `fonts/cjk-only-bold/AnthropicSerifWebText-CJK-Only-Bold.ttf` (15.3 MB) | `fonts/cjk-only-bold/AnthropicSerifWebText-CJK-Only-Bold.woff2` (7.2 MB) | 31,724 |
 | 1.1.0 multilingual | `fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf` (15.6 MB) | `fonts/multilingual/AnthropicSerifWebText-Multilingual.woff2` (7.0 MB) | 33,897 |
 | 1.2.0 full | `fonts/full/AnthropicSerifWebText-Full.ttf` (23.6 MB) | `fonts/full/AnthropicSerifWebText-Full.woff2` (8.4 MB) | 47,092 |
+
+**1.0.0-bold** exists for one reason: the Medium Chinese in 1.0.0 can look
+thin and pale beside the Western text. It has identical code points,
+glyph count, metrics and Western outlines; only the Chinese outlines are
+heavier (+32.6% ink density on a sample paragraph). If you want that,
+install **either** `cjk-only` **or** `cjk-only-bold`, never both. Do not
+also apply `font-weight: 700` in CSS, which would synthetically embolden
+the Latin. A visual comparison is in
+[`../assets/cjk-weight-comparison.png`](../assets/cjk-weight-comparison.png).
 
 The examples below use **1.2.0 full**, the only build with kana and
 Hangul. Swap in a smaller build's filenames if you do not need them; every
@@ -24,11 +34,13 @@ installing on an operating system or embedding in a document.
 - **macOS**: open the TTF with Font Book and click Install Font.
 - **Linux**: copy to `~/.local/share/fonts/`, then run `fc-cache -fv`.
 
-The internal family name is `Anthropic Serif Web Text` in **all three**
-builds. Do not install two versions at once, and remove the original
-upstream Latin font first if it is already present; otherwise the font
-cache will resolve unpredictably. For a renamed build, see
-[BUILD.md](BUILD.md).
+The internal family name is `Anthropic Serif Web Text` in **all four**
+builds, and the subfamily reads `Regular` in all of them. Do not install
+two versions at once, and remove the original upstream Latin font first if
+it is already present; otherwise the font cache will resolve
+unpredictably. This matters most for `cjk-only` and `cjk-only-bold`, whose
+family and subfamily names are completely identical. For a renamed build,
+see [BUILD.md](BUILD.md).
 
 Verify with:
 
@@ -176,6 +188,8 @@ font.
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | Chinese, kana or Hangul still shows boxes | A smaller build or the original font is selected | Install 1.2.0 full and clear the font cache |
+| Chinese looks thin and pale | 1.0.0 Medium is lighter than the Western stems | Use `cjk-only-bold`, and do not stack `font-weight: 700` on top |
+| Both `cjk-only` and `cjk-only-bold` installed, unpredictable results | Identical family / subfamily names | Remove one and clear the font cache |
 | Greek accents or Cyrillic letters missing | Client ignores format 12 cmap | Use a modern browser or include the range in a subset |
 | Hangul Jamo typed separately do not form a syllable | No Jamo composition lookups | Use precomposed U+AC00–U+D7A3 syllables or a shaping engine |
 | Vertical kana looks misplaced | No `vert` / `vrt2` feature | Avoid vertical writing mode, or use a dedicated vertical font |

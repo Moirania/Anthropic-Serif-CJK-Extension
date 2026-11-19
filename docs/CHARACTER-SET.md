@@ -10,8 +10,15 @@ Earlier builds are strict subsets:
 | Build | Added | Glyphs | Code points | Excludes |
 | --- | --- | --- | --- | --- |
 | 1.0.0 cjk-only | 31,004 | 31,724 | 31,595 | all LGC, kana, Hangul, CJK extra symbols |
+| 1.0.0-bold cjk-only-bold | 31,004 | 31,724 | 31,595 | same as 1.0.0 (weight variant only) |
 | 1.1.0 multilingual | 33,177 | 33,897 | 33,768 | kana, Hangul, CJK extra symbols |
 | 1.2.0 full | 46,372 | 47,092 | 46,963 | nothing from either source |
+
+**1.0.0-bold has exactly the same cmap as 1.0.0**, glyph for glyph and code
+point for code point; every range table below applies identically to both.
+The only difference is the CJK outline source weight (Bold wght 700 instead
+of Medium wght 500). See [../fonts/README.md](../fonts/README.md) for the
+stem and ink-density measurements.
 
 See [../fonts/README.md](../fonts/README.md) for the side-by-side
 comparison.
@@ -207,8 +214,8 @@ this is still not a universal pan-Unicode font:
   scope, as are kana extensions beyond U+31FF that the Source Han Serif
   version used here does not contain.
 
-The 1.0.0 and 1.1.0 builds deliberately stop earlier; see the table at
-the top of this document.
+The 1.0.0, 1.0.0-bold and 1.1.0 builds deliberately stop earlier; see the
+table at the top of this document.
 
 ## cmap structure
 

@@ -58,8 +58,12 @@ License 1.1:
 - Noto Serif from [notofonts/latin-greek-cyrillic](https://github.com/notofonts/latin-greek-cyrillic),
   Copyright 2022 The Noto Project Authors, for Latin Extended, Greek,
   Cyrillic and the shared marks. It was instanced at wght=500 before use.
-  All three builds use the same two sources; no third font was introduced
-  for the kana and Hangul coverage.
+  All builds use the same two sources; no third font was introduced
+  for the kana and Hangul coverage. The `cjk-only-bold` variant is not a
+  new source either: it points the same Noto Serif CJK SC family at its
+  **Bold** TTC (wght 700, same 44,746-code-point cmap) instead of the
+  Medium TTC. The Adobe copyright line and the OFL obligations are
+  therefore identical; only the outline instances differ.
 
 The OFL permits use, study, modification, embedding and redistribution,
 including commercial use, subject to these conditions:

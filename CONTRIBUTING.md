@@ -24,9 +24,12 @@ Without that information a pull request cannot be merged.
   classical Japanese kana orthography, older Hangul orthography).
 - Add a subsetting recipe to [docs/USAGE.md](docs/USAGE.md).
 - Propose an additional Unicode range, with the source font and its license.
-- Improve the kana or Hangul preview sheets under `assets/`; keep the
-  print-specimen style (hard rules, crop marks, left alignment, no rounded
-  corners, no glass, no gradient buttons).
+- Improve the kana, Hangul or CJK weight preview sheets under `assets/`;
+  keep the print-specimen style (hard rules, crop marks, left alignment,
+  no rounded corners, no glass, no gradient buttons).
+- Propose another CJK weight variant (SemiBold for an exact optical match,
+  Heavy for display use). It must be a new independent build with its own
+  directory, filenames, README row and Release.
 
 ## Pull request process
 
@@ -38,21 +41,22 @@ Without that information a pull request cannot be merged.
    the result with the checks in [docs/BUILD.md](docs/BUILD.md).
 4. Confirm that the README, `fonts/README.md` and the docs still describe
    the real output: glyph count, code point count, file sizes.
-5. Do not commit binary files other than the six font files in the three
+5. Do not commit binary files other than the eight font files in the four
    `fonts/` subdirectories and the specimen images under `assets/`. Do not
    commit credentials, local paths, or generated caches.
 6. **Never overwrite an existing build.** A new version goes into its own
    `fonts/` subdirectory with its own filenames, its own README row and
-   its own GitHub Release. All three of 1.0.0, 1.1.0 and 1.2.0 must stay
-   downloadable.
+   its own GitHub Release. All four of 1.0.0, 1.0.0-bold, 1.1.0 and 1.2.0
+   must stay downloadable. Weight variants count as separate builds: do
+   not replace `cjk-only/` with a different CJK weight.
 7. Open a pull request describing what changed and how you verified it.
 
 ## Reporting problems
 
 Use the GitHub issue tracker and include:
 
-- which build you used (`cjk-only` 1.0.0, `multilingual` 1.1.0 or
-  `full` 1.2.0);
+- which build you used (`cjk-only` 1.0.0, `cjk-only-bold` 1.0.0-bold,
+  `multilingual` 1.1.0 or `full` 1.2.0);
 - operating system and application, browser, or rendering engine version;
 - the exact text or Unicode code points involved;
 - what you expected and what you saw;

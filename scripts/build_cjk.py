@@ -39,8 +39,18 @@ Typical use, producing the two independent builds:
         --full \
         --out ./fonts/full/AnthropicSerifWebText-Full.ttf
 
-The three outputs are independent: run any of them. Never write a new
-build over an existing file. Pass --no-cjk to build a
+    # 1.0.0-cjk-bold (same CJK-only coverage, heavier Chinese outlines)
+    python3 scripts/build_cjk.py \
+        --latin /path/to/AnthropicSerifWebText.ttf \
+        --cjk-ttc /path/to/NotoSerifCJK-Bold.ttc \
+        --no-lgc \
+        --version-string "Version 1.000 CJK Bold" \
+        --out ./fonts/cjk-only-bold/AnthropicSerifWebText-CJK-Only-Bold.ttf
+
+The four outputs are independent: run any of them. The CJK source path
+controls the Chinese weight; point --cjk-ttc at SemiBold.ttc or Light.ttc
+to produce a different optical match without changing coverage. Never
+write a new build over an existing file. Pass --no-cjk to build a
 Latin/Greek/Cyrillic-only extension (useful for testing).
 
 Requires: fontTools, brotli (only for a subsequent WOFF2 conversion).
@@ -231,6 +241,9 @@ def main():
                     help="cu2qu max error in source units (default 0.5)")
     ap.add_argument("--family-name", default=None,
                     help="replace internal family names (conservative builds)")
+    ap.add_argument("--version-string", default=None,
+                    help="override the nameID 5 version string, e.g. "
+                         "'Version 1.000 CJK Bold'")
     ap.add_argument("--no-cjk", action="store_true", help="skip the CJK source")
     ap.add_argument("--no-lgc", action="store_true", help="skip the LGC source")
     ap.add_argument("--full", action="store_true",
@@ -388,15 +401,24 @@ def main():
     copyright_lgc = ""
     if lgc is not None:
         copyright_lgc = str(lgc["name"].getDebugName(0) or "")
-    notice = ("CJK glyph outlines: " + copyright_cjk +
-              " Latin Extended, Greek and Cyrillic outlines: " + copyright_lgc +
-              " Both licensed under the SIL Open Font License, Version 1.1. "
-              "This font is a modified composite; Reserved Font Names "
-              "'Noto' and 'Source Han' are not used. Upstream Latin outlines "
-              "are proprietary and are not relicensed.")
+    notice = "CJK glyph outlines: " + copyright_cjk
+    if copyright_lgc:
+        notice += " Latin Extended, Greek and Cyrillic outlines: " + copyright_lgc
+    notice += (" Both licensed under the SIL Open Font License, Version 1.1. "
+               "This font is a modified composite; Reserved Font Names "
+               "'Noto' and 'Source Han' are not used. Upstream Latin outlines "
+               "are proprietary and are not relicensed.")
     set_name(base, 0, notice)
-    set_name(base, 5, "Version 1.200 Full" if args.full
-             else "Version 1.100 CJK-LGC")
+    if args.version_string:
+        version_string = args.version_string
+    elif args.full:
+        version_string = "Version 1.200 Full"
+    elif lgc is not None:
+        version_string = "Version 1.100 CJK-LGC"
+    else:
+        version_string = "Version 1.000 CJK"
+    set_name(base, 5, version_string)
+    print("version string:", version_string)
     license_desc = "SIL Open Font License, Version 1.1"
     if lgc is not None:
         license_desc = str(lgc["name"].getDebugName(13) or license_desc)

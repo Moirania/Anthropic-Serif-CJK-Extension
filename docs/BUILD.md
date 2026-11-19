@@ -27,7 +27,7 @@ repository. Both are under the SIL Open Font License 1.1.
 
 ## Full rebuild
 
-The same script produces all three independent builds. Run it with
+The same script produces all four independent builds. Run it with
 different output paths; no run touches another build's files.
 
 ```bash
@@ -37,6 +37,14 @@ python3 scripts/build_cjk.py \
   --cjk-ttc /path/to/NotoSerifCJK-Medium.ttc \
   --no-lgc \
   --out ./fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf
+
+# 1.0.0-bold cjk-only-bold (same coverage, heavier Chinese)
+python3 scripts/build_cjk.py \
+  --latin /path/to/AnthropicSerifWebText.ttf \
+  --cjk-ttc /path/to/NotoSerifCJK-Bold.ttc \
+  --no-lgc \
+  --version-string "Version 1.000 CJK Bold" \
+  --out ./fonts/cjk-only-bold/AnthropicSerifWebText-CJK-Only-Bold.ttf
 
 # 1.1.0 multilingual (default, both sources)
 python3 scripts/build_cjk.py \
@@ -67,6 +75,7 @@ Useful options:
 | `--out` | required | Output TTF path |
 | `--max-err` | 0.5 | cu2qu maximum error in source units |
 | `--family-name` | keep upstream name | Replace internal family and PostScript names |
+| `--version-string` | auto | Override nameID 5, e.g. `Version 1.000 CJK Bold` |
 | `--no-cjk` | off | Skip the CJK source |
 | `--no-lgc` | off | Skip the LGC source (CJK-only build) |
 | `--full` | off | Add every remaining CJK source code point: kana, Hangul and CJK symbols (1.2.0) |
@@ -80,6 +89,8 @@ from fontTools.ttLib import TTFont
 pairs = [
     ("fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf",
      "fonts/cjk-only/AnthropicSerifWebText-CJK-Only.woff2"),
+    ("fonts/cjk-only-bold/AnthropicSerifWebText-CJK-Only-Bold.ttf",
+     "fonts/cjk-only-bold/AnthropicSerifWebText-CJK-Only-Bold.woff2"),
     ("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf",
      "fonts/multilingual/AnthropicSerifWebText-Multilingual.woff2"),
     ("fonts/full/AnthropicSerifWebText-Full.ttf",
@@ -146,19 +157,46 @@ for the rule that a new version must never overwrite an existing one.
 
 ## Choosing the weight
 
-The default is `wght=500` for both sources. The upstream Latin is a Text
-optical size with a fairly heavy vertical stem. At 2000 UPM the Latin `H`
-stem measures about 227 units; Noto Serif CJK Regular at 1000 UPM measures
-about 68 units (136 after scaling), Medium about 85 (170 after scaling),
-and SemiBold about 104 (208 after scaling). Medium is the closest visual
-match, and pinning the Noto Serif variable font to the same 500 keeps the
-Greek and Cyrillic stems consistent with the Chinese. To compare, change
-`--lgc-weight` or point `--cjk-ttc` at
-`NotoSerifCJK-Light.ttc`, `NotoSerifCJK-Bold.ttc` and so on.
+Two independent weight decisions are involved.
+
+**CJK source weight** is controlled by which `--cjk-ttc` file you pass.
+All seven weights ship as TTCs with identical cmap coverage (44,746 code
+points), so switching weight never changes which characters you get.
+Measured by rendering `H` and `中` at the same pixel size (FreeType
+normalises by unitsPerEm, so 1000 UPM CJK and 2000 UPM Latin are directly
+comparable):
+
+| CJK source | `usWeightClass` | `中` stem | vs. Western `H` (61.4 px) | Sample ink |
+| --- | --- | --- | --- | --- |
+| Regular | 400 | 47.5 px | -22.7% | 17,931 px |
+| Medium (default) | 500 | 54.5 px | -11.1% | 21,178 px |
+| SemiBold | 600 | 60.7 px | -1.0% | 23,744 px |
+| **Bold (1.0.0-bold)** | **700** | **70.7 px** | **+15.1%** | **28,082 px** |
+| Heavy | 900 | 82.3 px | +34.1% | 33,346 px |
+
+Medium is the default for 1.0.0, 1.1.0 and 1.2.0 because it sits reasonably
+close to the Latin without darkening dense Chinese text. **SemiBold is the
+near-exact optical match** (-1.0%). **Bold is deliberately heavier** and is
+what `cjk-only-bold` uses, because its purpose is to fix Chinese that reads
+as thin and pale, not merely to equalise stem widths. To produce a tighter
+match, point `--cjk-ttc` at `NotoSerifCJK-SemiBold.ttc` and change the
+output name; no other parameter needs to change.
+
+`cjk-only-bold` keeps `OS/2.usWeightClass = 400` and `name` ID 2 =
+`Regular`. The Western outlines are Regular and the internal family is
+unchanged, so the file is a Regular font with heavier Chinese, not a
+synthetic bold. Do not install it alongside `cjk-only`: the two have
+identical family and subfamily names and the font cache cannot tell them
+apart.
+
+**LGC source weight** is controlled by `--lgc-weight` (default 500).
+Pinning the Noto Serif variable font to the same 500 keeps Greek and
+Cyrillic stems consistent with the Medium Chinese used in 1.1.0 and 1.2.0.
+The 1.0.0 builds do not use the LGC source at all (`--no-lgc`).
 
 ## Verification checklist
 
-Run the same checks on all three builds; only the counts differ.
+Run the same checks on all four builds; only the counts differ.
 
 ```bash
 python3 - <<'PY'
@@ -166,6 +204,7 @@ from fontTools.ttLib import TTFont
 
 builds = [
     ("fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf", 31724, 31595),
+    ("fonts/cjk-only-bold/AnthropicSerifWebText-CJK-Only-Bold.ttf", 31724, 31595),
     ("fonts/multilingual/AnthropicSerifWebText-Multilingual.ttf", 33897, 33768),
     ("fonts/full/AnthropicSerifWebText-Full.ttf", 47092, 46963),
 ]
@@ -186,9 +225,23 @@ for path, want_glyphs, want_codes in builds:
 PY
 ```
 
-Expected for 1.0.0: 31,724 glyphs, 31,595 code points, Greek / kana /
-Hangul `MISSING`. For 1.1.0: 33,897 glyphs, 33,768 code points, Greek
-resolved, kana / Hangul still `MISSING`. For 1.2.0: 47,092 glyphs,
+Expected for 1.0.0 and 1.0.0-bold: 31,724 glyphs, 31,595 code points,
+Greek / kana / Hangul `MISSING`. The two must have **identical** cmap
+dictionaries; only the Chinese outlines differ. Verify that directly:
+
+```python
+a = TTFont("fonts/cjk-only/AnthropicSerifWebText-CJK-Only.ttf")
+b = TTFont("fonts/cjk-only-bold/AnthropicSerifWebText-CJK-Only-Bold.ttf")
+print("cmap identical:", a.getBestCmap() == b.getBestCmap())
+western = a.getGlyphOrder()[:720]
+print("western glyphs identical:",
+      all(a["glyf"][g] == b["glyf"][g] for g in western))
+print("Chinese differs:",
+      a["glyf"][a.getBestCmap()[0x4E00]] != b["glyf"][b.getBestCmap()[0x4E00]])
+```
+
+For 1.1.0: 33,897 glyphs, 33,768 code points, Greek resolved, kana /
+Hangul still `MISSING`. For 1.2.0: 47,092 glyphs,
 46,963 code points, all six scripts resolved. All three retain 19 GSUB
 features, 2 GPOS features and four cmap subtables including a format 12
 table. Render a mixed string such as
@@ -246,3 +299,8 @@ avoid any Reserved Font Name or trademark conflict; see
   arbitrary Jamo sequences at render time is not supported.
 - The 1.2.0 build is 23.6 MB as TTF and 8.4 MB as WOFF2. Subset for the
   web; see [USAGE.md](USAGE.md).
+- `cjk-only-bold` is heavier only in its Chinese outlines. It is not a
+  true Bold weight of the whole family: Western glyphs, kerning and all
+  OpenType features are identical to 1.0.0, and the OS/2 weight class
+  still reads 400. Applying `font-weight: 700` in CSS on top of it will
+  trigger synthetic emboldening of the Latin, which is usually not wanted.

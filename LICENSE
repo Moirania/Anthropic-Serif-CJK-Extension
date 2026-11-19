@@ -48,7 +48,11 @@ Two OFL-licensed sources supply the added outlines in fonts/:
      (Source Han Serif), copyright (c) 2014-2022 Adobe
      (http://www.adobe.com/) and other contributors. The 1.0.0 and 1.1.0
      builds use only its Chinese-related characters; the 1.2.0 build uses
-     essentially its entire remaining character set.
+     essentially its entire remaining character set. The 1.0.0-bold
+     build uses this same family's Bold weight (wght 700) instead of
+     Medium (wght 500) for its Chinese outlines; it is not a separate
+     work or a separate source, and the same copyright and OFL
+     conditions apply.
 
   b) Latin Extended, Greek and Cyrillic: Noto Serif from the
      notofonts/latin-greek-cyrillic project, Copyright 2022 The Noto

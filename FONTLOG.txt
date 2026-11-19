@@ -24,6 +24,12 @@ Version history
                       Shipped in fonts/full/ as a third independent build
                       with its own GitHub Release. See the section
                       "Version 1.200 additions" below.
+  1.000b 2026-11-19  Chinese weight variant (1.0.0-bold). Same coverage
+                      as 1.0.0, but Chinese outlines taken from Noto Serif
+                      CJK SC Bold instead of Medium. Shipped in
+                      fonts/cjk-only-bold/ as a fourth independent build
+                      with its own GitHub Release. See the section
+                      "Version 1.000 CJK Bold" below.
 
 This file records the changes made to the font software, following the
 convention recommended by the SIL Open Font License FAQ for modified
@@ -214,6 +220,67 @@ Final metrics: 47,092 glyphs, 46,963 addressable code points, 2,619
 non-BMP code points, highest code point U+3106C.
 
 
+Version 1.000 CJK Bold (Chinese weight variant)
+------------------------------------------------
+
+Copyright (c) 2026 Moirania, for the changes listed below.
+
+Motivation: in the 1.0.0 build the Chinese (Noto Serif CJK SC Medium,
+wght 500) reads thinner and paler than the upstream Western text. Measured
+by rendering H and 中 at the same pixel size, the Western H stem is
+61.4 px while the Medium 中 stem is 54.5 px (-11.1%). This variant makes
+the Chinese deliberately heavier instead of changing the Western outlines.
+
+Changes:
+
+- Pointed --cjk-ttc at NotoSerifCJK-Bold.ttc (SC face index 2,
+  usWeightClass 700, upem 1000, CFF outlines, 44,746 cmap code points).
+  All seven weight TTCs of this family have identical cmap coverage, so
+  the 31,004 selected Chinese code points are unchanged. No new outline
+  source and no new licence were introduced.
+
+- Set --no-lgc, so this build has exactly the 1.0.0 character set: no
+  Greek, no Cyrillic, no Latin Extended beyond the upstream font, no
+  kana, no Hangul. Added --version-string to scripts/build_cjk.py so the
+  nameID 5 string reads "Version 1.000 CJK Bold" rather than being inferred
+  from the build mode. Also made the attribution notice omit the LGC
+  copyright sentence when the LGC source is not used.
+
+- Verified against 1.0.0: 31,724 glyphs, 31,595 addressable code points,
+  identical cmap dictionaries, identical Western glyph outlines and
+  advances for all 720 upstream glyphs, identical hhea (1985 / -515 / 0),
+  identical 19 GSUB and 2 GPOS features, identical 2000-unit Chinese
+  advances. Only the Chinese glyf outlines differ. maxPoints rises from
+  885 to 898 because the heavier contours have slightly more points.
+
+- Measured result on the same paragraph at the same size: ink pixels
+  21,178 -> 28,082 (+32.6%); 中 stem 54.5 px -> 70.7 px (+15.1% versus
+  the Western H). SemiBold (60.7 px) would be the near-exact optical
+  match; Bold was chosen because the brief was to fix thin, pale Chinese.
+  The full seven-weight stem table is in docs/BUILD.md.
+
+- Produced assets/cjk-weight-comparison.png with the same print-specimen
+  style: two identical text blocks (Medium above, Bold below), a stem
+  comparison of H / H / 中 / 中, and the measured ink-density line. Hard
+  1px rules, crop marks, left alignment, generous margins, no rounded
+  corners, no glass, no gradient buttons.
+
+- Kept OS/2.usWeightClass = 400 and name ID 2 = "Regular", because the
+  Western outlines and internal family are unchanged. This is a Regular
+  font with heavier Chinese, not a synthetic bold face. Consequently
+  fonts/cjk-only/ and fonts/cjk-only-bold/ have identical family and
+  subfamily names and must never be installed together.
+
+- Rebuilt TTF (15.3 MB) and WOFF2 (7.2 MB), updated README.md,
+  fonts/README.md, docs/BUILD.md, docs/CHARACTER-SET.md, docs/USAGE.md,
+  docs/COMPLIANCE.md, LICENSE, CITATION.cff and CONTRIBUTING.md for four
+  builds, and created the v1.0.0-cjk-bold GitHub Release with its own
+  TTF, WOFF2 and comparison image.
+
+Final metrics: 31,724 glyphs, 31,595 addressable code points, 2,306
+non-BMP code points, highest code point U+3106C.
+
+
 Known limitations
 -----------------
 
@@ -233,9 +300,17 @@ Known limitations
   recombined into syllables, and no vertical kana layout is implemented.
 
 - The internal family name is still "Anthropic Serif Web Text" in all
-  three builds, so that a build can replace the original font in an
-  existing document. Install only one build at a time. For a conservative
-  redistribution, rename the internal family; see docs/BUILD.md.
+  four builds, so that a build can replace the original font in an
+  existing document. Install only one build at a time. The 1.0.0 and
+  1.0.0-bold builds additionally share the same "Regular" subfamily and
+  OS/2 weight class 400, so they are indistinguishable to a font cache.
+  For a conservative redistribution, rename the internal family; see
+  docs/BUILD.md.
+
+- 1.0.0-bold makes Chinese heavier but is not a true Bold weight of the
+  family. Western outlines, kerning and all OpenType features are
+  identical to 1.0.0. Applying CSS font-weight: 700 on top of it would
+  synthetically embolden the Latin and is not recommended.
 
 - Colour emoji and pictographs are not included; use a dedicated emoji
   font. The U+1F200 block contributes only monochrome enclosed CJK
